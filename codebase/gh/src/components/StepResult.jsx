@@ -73,6 +73,16 @@ export default function StepResult({ payload, onBack, onRestart }) {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
+        onclone: (documentClone) => {
+          const qrCanvas = documentClone.querySelector('.qr-wrapper canvas')
+          if (qrCanvas) {
+            const img = documentClone.createElement('img')
+            img.src = qrCanvas.toDataURL('image/png')
+            img.style.width = '180px'
+            img.style.height = '180px'
+            qrCanvas.parentNode.replaceChild(img, qrCanvas)
+          }
+        },
       })
       const imgData = canvas.toDataURL('image/png')
       const pdf = new jsPDF('p', 'mm', 'a4')
