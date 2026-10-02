@@ -64,9 +64,11 @@ jobs:
           }
           EOF
 
-      - name: clasp 登入與推送
+      - name: clasp 登入、推送與部署
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          GAS_DEPLOYMENT_ID: AKfycbzN09AHK1xRtgOG7AywmiLHown1ltjCTwS-sHpTHTe82bmT3uIQ2O6xlcUrtNw8Pg6gCA
         run: |
           printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
           clasp push -f
+          clasp deploy --deploymentId "$GAS_DEPLOYMENT_ID" --description "CI deploy $(date -u +%Y-%m-%dT%H:%M:%SZ)"
