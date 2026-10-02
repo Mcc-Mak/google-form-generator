@@ -66,29 +66,7 @@ jobs:
 
       - name: clasp 登入與推送
         env:
-          CLASPRC_ACCESS_TOKEN: ${{ secrets.CLASPRC_ACCESS_TOKEN }}
-          CLASPRC_ID_TOKEN: ${{ secrets.CLASPRC_ID_TOKEN }}
-          CLASPRC_REFRESH_TOKEN: ${{ secrets.CLASPRC_REFRESH_TOKEN }}
-          CLASPRC_CLIENT_ID: ${{ secrets.CLASPRC_CLIENT_ID }}
-          CLASPRC_CLIENT_SECRET: ${{ secrets.CLASPRC_CLIENT_SECRET }}
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
         run: |
-          mkdir -p ~/.clasprc
-          cat > ~/.clasprc.json <<EOF
-          {
-            "token": {
-              "access_token": "${CLASPRC_ACCESS_TOKEN}",
-              "id_token": "${CLASPRC_ID_TOKEN}",
-              "refresh_token": "${CLASPRC_REFRESH_TOKEN}",
-              "scope": "https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/service.management https://www.googleapis.com/auth/logging.read https://www.googleapis.com/auth/cloud-platform",
-              "expires_in": 3600,
-              "expiry_date": 0
-            },
-            "oauth2ClientSettings": {
-              "clientId": "${CLASPRC_CLIENT_ID}",
-              "clientSecret": "${CLASPRC_CLIENT_SECRET}",
-              "redirectUri": "http://localhost"
-            },
-            "isLocalCreds": false
-          }
-          EOF
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
           clasp push -f

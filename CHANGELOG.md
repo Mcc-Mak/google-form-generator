@@ -2,6 +2,11 @@
 
 本專案版本依 `major.minor.patch` 格式管理。
 
+## 0.3.2
+
+- 簡化 GAS CI 部署的 clasp 認證：以單一 `CLASPRC_JSON` secret 取代 5 個個別 secrets（`CLASPRC_ACCESS_TOKEN` 等），解決空值導致 JSON 缺欄位的錯誤。
+- 更新 `QuickStart.md`：新增「CI Secrets 設定」章節，說明 `GAS_SCRIPT_ID` 與 `CLASPRC_JSON` 的取得方式與新增步驟。
+
 ## 0.3.1
 
 - 修正 CI 分支推進邏輯：改用 refspec push 取代本地 checkout/merge，解決跨 job 無法存取本地分支的問題。

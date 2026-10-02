@@ -124,9 +124,37 @@ clasp push
 
 > **重要**：更新部署後，Web App URL 不會改變。
 
-## 4. GitHub Pages 部署
+## 4. CI Secrets 設定
 
-### 4.1 CI 自動部署
+GAS 後端 CI 部署（`.github/workflows/gas.yml`）需要以下 GitHub Secrets：
+
+### 4.1 `GAS_SCRIPT_ID`
+
+GAS 專案的指令碼 ID。前往 [Google Apps Script 主控台](https://script.google.com/) → 專案設定 → 複製「指令碼 ID」。
+
+### 4.2 `CLASPRC_JSON`
+
+完整的 `~/.clasprc.json` 檔案內容。在本機執行 `clasp login` 後，此檔案會自動產生於 `~/.clasprc.json`。
+
+取得方式：
+
+```bash
+cat ~/.clasprc.json
+```
+
+將整個 JSON 內容（包含 `token`、`oauth2ClientSettings`、`isLocalCreds` 等欄位）原樣貼入 GitHub Secret。
+
+> **安全性提示**：`~/.clasprc.json` 包含 OAuth refresh token，請勿提交至版本控制系統。
+
+### 4.3 新增 Secrets
+
+1. 前往 GitHub 儲存庫的「Settings」頁面。
+2. 左側選單找到「Secrets and variables」→「Actions」。
+3. 點擊「New repository secret」，分別新增 `GAS_SCRIPT_ID` 與 `CLASPRC_JSON`。
+
+## 5. GitHub Pages 部署
+
+### 5.1 CI 自動部署
 
 前端部署已整合至 CI pipeline（`.github/workflows/gh.yml`）。當推送到 `dev-001` 分支時，CI 會自動執行以下步驟：
 
@@ -136,14 +164,14 @@ clasp push
 4. 推進分支：`dev-001 → dev → main`
 5. 部署 `dist/` 至 GitHub Pages
 
-### 4.2 設定 GitHub Pages 來源
+### 5.2 設定 GitHub Pages 來源
 
 1. 前往 GitHub 儲存庫的「Settings」頁面。
 2. 左側選單找到「Pages」。
 3. 在「Source」區塊選擇 **GitHub Actions**。
 4. 儲存設定。
 
-### 4.3 取得 GitHub Pages URL
+### 5.3 取得 GitHub Pages URL
 
 CI 部署完成後，GitHub 會顯示 Pages URL，格式如下：
 
@@ -153,7 +181,7 @@ https://your-username.github.io/your-repo/
 
 > **注意**：`vite.config.js` 中已設定 `base: '/google-form-generator/'`，以對應 GitHub Pages 子路徑。若您的儲存庫名稱不同，請同步修改此設定。
 
-## 5. 完整部署檢查清單
+## 6. 完整部署檢查清單
 
 | 步驟 | 狀態 |
 |---|---|
@@ -162,6 +190,7 @@ https://your-username.github.io/your-repo/
 | 執行 `clasp push` 推送後端程式碼 | ☐ |
 | 在 GAS 部署為 Web App（存取設為「任何人」） | ☐ |
 | 取得 GAS Web App URL | ☐ |
+| GitHub Settings → Secrets 新增 `GAS_SCRIPT_ID` 與 `CLASPRC_JSON` | ☐ |
 | GitHub Settings → Pages 設定來源為 GitHub Actions | ☐ |
 | 推送 `dev-001` 觸發 CI 建置與部署 | ☐ |
 | 開啟 GitHub Pages 網站並輸入 GAS URL | ☐ |
