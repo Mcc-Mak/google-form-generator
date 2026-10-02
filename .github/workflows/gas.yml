@@ -8,6 +8,9 @@ on:
       - '.github/workflows/gas.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 concurrency:
   group: gas-deploy
   cancel-in-progress: false
@@ -23,17 +26,17 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 快轉 dev 至 dev-001
+      - name: 推進 dev-001 → dev → main
         run: |
-          git checkout dev || git checkout -b dev dev-001
-          git merge --ff-only dev-001
-          git push origin dev
-
-      - name: 快轉 main 至 dev
-        run: |
-          git checkout main || git checkout -b main dev
-          git merge --ff-only dev
-          git push origin main
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          # dev-001 → dev
+          git push origin dev-001:dev
+          # 拉取更新後的 dev 至本地參照
+          git fetch origin dev:refs/heads/dev
+          # dev → main
+          git push origin dev:main
 
   # ── clasp push ──
   deploy:

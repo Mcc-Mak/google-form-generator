@@ -2,6 +2,14 @@
 
 本專案版本依 `major.minor.patch` 格式管理。
 
+## 0.3.1
+
+- 修正 CI 分支推進邏輯：改用 refspec push 取代本地 checkout/merge，解決跨 job 無法存取本地分支的問題。
+- 修正推進順序為正確的逐級鏈式：`dev-001 → dev`，再 `dev → main`（而非 dev-001 同時推至 dev 與 main）。
+- 明確設定 git remote URL 使用 GITHUB_TOKEN，解決 `github-actions[bot]` push 403 權限錯誤。
+- 合併 `promote-dev` 與 `promote-main` 為單一 `promote` job，簡化流程。
+- `gas.yml` 新增 `permissions: contents: write`。
+
 ## 0.3.0
 
 - 前端從 Vanilla JS 遷移至 React + Vite：6 步驟精靈以元件化方式重構（`App.jsx` + 6 個步驟元件 + `api.js` + `constants.js`），保留原有 UI 風格與全部功能。

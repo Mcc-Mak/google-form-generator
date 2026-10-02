@@ -42,9 +42,9 @@ jobs:
         with:
           path: codebase/gh/dist
 
-  # ── 推進 dev-001 → dev ──
-  promote-dev:
-    name: 推進至 dev
+  # ── 推進 dev-001 → dev → main ──
+  promote:
+    name: 推進分支
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -53,32 +53,27 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 快轉 dev 至 dev-001
+      - name: 推進 dev-001 → dev → main
         run: |
-          git checkout dev || git checkout -b dev dev-001
-          git merge --ff-only dev-001
-          git push origin dev
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          # dev-001 → dev
+          git push origin dev-001:dev
+          # 拉取更新後的 dev 至本地參照
+          git fetch origin dev:refs/heads/dev
+          # dev → main
+          git push origin dev:main
 
-  # ── 推進 dev → main 並部署 Pages ──
-  promote-main:
-    name: 推進至 main 並部署
-    needs: promote-dev
+  # ── 部署 GitHub Pages ──
+  deploy:
+    name: 部署 GitHub Pages
+    needs: promote
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 快轉 main 至 dev
-        run: |
-          git checkout main || git checkout -b main dev
-          git merge --ff-only dev
-          git push origin main
-
       - uses: actions/configure-pages@v5
 
       - id: deploy
