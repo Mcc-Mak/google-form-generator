@@ -245,17 +245,25 @@ export default function StepResult({ payload, onBack, onRestart }) {
 }
 
 function UrlRow({ label, value, onCopy }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = () => {
+    onCopy(value)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   return (
     <div className="url-row">
       <label>{label}</label>
       <div className="copy-row">
-        <input type="text" value={value} readOnly />
+        <div className="url-text">{value}</div>
         <button
           type="button"
           className="btn btn-secondary btn-sm"
-          onClick={() => onCopy(value)}
+          onClick={handleCopy}
         >
-          複製
+          {copied ? '已複製' : '複製'}
         </button>
       </div>
     </div>

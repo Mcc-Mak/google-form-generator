@@ -24,6 +24,8 @@ export default [
         navigator: 'readonly',
         URL: 'readonly',
         fetch: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
       },
     },
     settings: {
