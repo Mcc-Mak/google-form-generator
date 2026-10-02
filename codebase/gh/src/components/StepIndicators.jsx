@@ -4,28 +4,26 @@ export default function StepIndicators({ current, onGoTo }) {
   return (
     <nav className="step-indicators" aria-label="步驟導覽">
       <ol>
-        {STEP_LABELS.map((_, i) => (
-          <li
-            key={i}
-            className={
-              'step-dot' +
-              (i === current ? ' active' : '') +
-              (i < current ? ' completed' : '')
-            }
-            onClick={() => i <= current && onGoTo(i)}
-            role="button"
-            tabIndex={i <= current ? 0 : -1}
-            onKeyDown={(e) => {
-              if ((e.key === 'Enter' || e.key === ' ') && i <= current) onGoTo(i)
-            }}
-          >
-            {i + 1}
+        {STEP_LABELS.map((label, i) => (
+          <li key={label}>
+            <button
+              type="button"
+              className={
+                'step-dot' +
+                (i === current ? ' active' : '') +
+                (i < current ? ' completed' : '')
+              }
+              onClick={() => onGoTo(i)}
+              disabled={i > current}
+            >
+              {i + 1}
+            </button>
           </li>
         ))}
       </ol>
       <div className="step-labels">
-        {STEP_LABELS.map((label, i) => (
-          <span key={i}>{label}</span>
+        {STEP_LABELS.map((label) => (
+          <span key={label}>{label}</span>
         ))}
       </div>
     </nav>

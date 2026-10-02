@@ -39,7 +39,7 @@ export default function StepResult({ payload, onBack, onRestart }) {
 
   const copyToClipboard = (text) => {
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(text)
+      void navigator.clipboard.writeText(text)
     }
   }
 
@@ -51,7 +51,7 @@ export default function StepResult({ payload, onBack, onRestart }) {
     }
 
     const esc = (s) =>
-      String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+      String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')
 
     const urlItem = (label, value, isLink) => {
       const v = esc(value)
@@ -143,14 +143,12 @@ export default function StepResult({ payload, onBack, onRestart }) {
     iframe.style.border = '0'
     document.body.appendChild(iframe)
 
-    iframe.contentDocument.open()
-    iframe.contentDocument.write(html)
-    iframe.contentDocument.close()
+    iframe.srcdoc = html
 
     setTimeout(() => {
       iframe.contentWindow.focus()
       iframe.contentWindow.print()
-      setTimeout(() => document.body.removeChild(iframe), 1000)
+      setTimeout(() => iframe.remove(), 1000)
     }, 300)
   }
 
@@ -219,7 +217,7 @@ export default function StepResult({ payload, onBack, onRestart }) {
               />
               {result.shortViewUrl && (
                 <div className="qr-section">
-                  <label>QR Code（短網址）</label>
+                  <span className="qr-label">QR Code（短網址）</span>
                   <div className="qr-wrapper">
                     <QRCodeCanvas
                       value={result.shortViewUrl}
@@ -303,7 +301,7 @@ function UrlRow({ label, value, onCopy }) {
 
   return (
     <div className="url-row">
-      <label>{label}</label>
+      <span className="url-label">{label}</span>
       <div className="copy-row">
         <div className="url-text">{value}</div>
         <button

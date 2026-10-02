@@ -21,7 +21,7 @@ export default function StepSpreadsheets({ spreadsheetId, onSelect, onNext, onBa
   }
 
   useEffect(() => {
-    load()
+    load().catch(() => {})
   }, [])
 
   const handleNext = () => {

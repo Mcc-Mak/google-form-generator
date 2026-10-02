@@ -10,6 +10,9 @@ import { STEP_LABELS, CHOICE_TYPES, EMPTY_FIELD } from './constants'
 
 const TOTAL_STEPS = STEP_LABELS.length
 
+let _fieldSeq = 0
+const assignUid = (f) => ({ ...f, uid: f.uid || `f${++_fieldSeq}` })
+
 const initialWizardState = {
   spreadsheetId: '',
   spreadsheetName: '',
@@ -54,7 +57,7 @@ export default function App() {
   }, [])
 
   const setFields = useCallback((fields) => {
-    setWiz((prev) => ({ ...prev, fields }))
+    setWiz((prev) => ({ ...prev, fields: fields.map(assignUid) }))
   }, [])
 
   const updateField = useCallback((index, fieldPatch) => {
@@ -69,7 +72,7 @@ export default function App() {
   const addField = useCallback(() => {
     setWiz((prev) => ({
       ...prev,
-      fields: [...prev.fields, { ...EMPTY_FIELD }],
+      fields: [...prev.fields, assignUid({ ...EMPTY_FIELD })],
     }))
   }, [])
 
@@ -84,7 +87,9 @@ export default function App() {
     setWiz((prev) => {
       const fields = [...prev.fields]
       const target = index + direction
-      if (target < 0 || target >= fields.length) return prev
+      if (target < 0 || target >= fields.length) {
+        return prev
+      }
       ;[fields[index], fields[target]] = [fields[target], fields[index]]
       return { ...prev, fields }
     })

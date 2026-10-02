@@ -8,11 +8,6 @@ on:
       - '.github/workflows/gh.yml'
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
-
 concurrency:
   group: gh-deploy
   cancel-in-progress: false
@@ -22,6 +17,8 @@ jobs:
   build:
     name: 建置前端
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: codebase/gh
@@ -34,7 +31,7 @@ jobs:
           cache: npm
           cache-dependency-path: codebase/gh/package-lock.json
 
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run lint
       - run: npm run build
 
@@ -47,6 +44,8 @@ jobs:
     name: 推進分支
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -70,6 +69,9 @@ jobs:
     name: 部署 GitHub Pages
     needs: promote
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}

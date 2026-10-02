@@ -32,4 +32,4 @@ export const STEP_LABELS = [
   '顯示結果',
 ]
 
-export const EMPTY_FIELD = { type: '簡答', title: '', required: false, options: [] }
+export const EMPTY_FIELD = { uid: '', type: '簡答', title: '', required: false, options: [] }

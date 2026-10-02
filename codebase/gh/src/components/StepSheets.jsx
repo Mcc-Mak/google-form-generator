@@ -21,7 +21,7 @@ export default function StepSheets({ spreadsheetId, sheetName, onSelect, onNext,
   }
 
   useEffect(() => {
-    load()
+    load().catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spreadsheetId])
 

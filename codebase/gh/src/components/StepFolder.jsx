@@ -30,7 +30,7 @@ export default function StepFolder({
   }
 
   useEffect(() => {
-    load()
+    load().catch(() => {})
   }, [])
 
   useEffect(() => {

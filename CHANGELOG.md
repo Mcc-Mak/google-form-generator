@@ -2,6 +2,23 @@
 
 本專案版本依 `major.minor.patch` 格式管理。
 
+## 0.5.5
+
+- **SonarCloud 問題修復**：修復 26 項 SonarCloud 開放議題，涵蓋前端 React 元件與 GitHub Actions 工作流程：
+  - **S7781**：`String#replace()` → `String#replaceAll()`（StepResult.jsx HTML 跳脫）。
+  - **S1874**：移除已棄用的 `document.write`，改用 `iframe.srcdoc`（StepResult.jsx PDF 匯出）。
+  - **S7762**：`parentNode.removeChild(childNode)` → `childNode.remove()`（StepResult.jsx）。
+  - **S6853**：`<label>` 未關聯控制項改為 `<span>`（StepResult.jsx、StepFields.jsx）。
+  - **S2681**：`if` 陳述式補上大括號，修正條件執行瑕疵（App.jsx moveField）。
+  - **S9383**：useEffect 中非同步呼叫加上 `.catch()` 處理（StepFields、StepFolder、StepSheets、StepSpreadsheets、StepResult）。
+  - **S6479**：陣列索引作為 key 改為穩定唯一識別碼（StepIndicators 用 label、StepFields 用 uid）。
+  - **S6819**：`<li role="button">` 改為 `<li><button>` 語意元素（StepIndicators.jsx）。
+  - **S6772**：input 後文字以 `<span>` 包裹，消除模糊間距（StepFields.jsx）。
+  - **S8233**：`permissions` 從 workflow 層級移至 job 層級（gh.yml、gas.yml）。
+  - **S6505**：`npm ci` / `npm install` 加入 `--ignore-scripts`（gh.yml、gas.yml）。
+  - **S8543**：`@google/clasp` 鎖定版本 `@3.4.1`（gas.yml）。
+- **欄位唯一識別碼**：EMPTY_FIELD 新增 `uid` 欄位，addField 與 setFields 自動指派，作為 React key 使用。
+
 ## 0.5.4
 
 - **PDF 邊距**：匯出 PDF body 新增 10px padding。

@@ -34,7 +34,7 @@ export default function StepFields({
 
   useEffect(() => {
     if (fields.length === 0) {
-      load()
+      load().catch(() => {})
     } else {
       setLoading(false)
     }
@@ -103,7 +103,7 @@ export default function StepFields({
       <div className="fields-container">
         {fields.map((field, index) => (
           <FieldCard
-            key={index}
+            key={field.uid || 'field-' + index}
             index={index}
             total={fields.length}
             field={field}
@@ -181,7 +181,7 @@ function FieldCard({ index, total, field, onUpdate, onRemove, onMoveUp, onMoveDo
         </div>
 
         <div className="form-group field-required-group">
-          <label>&nbsp;</label>
+          <span className="spacer-label" aria-hidden="true">&nbsp;</span>
           <label className="checkbox-inline">
             <input
               type="checkbox"
@@ -189,7 +189,7 @@ function FieldCard({ index, total, field, onUpdate, onRemove, onMoveUp, onMoveDo
               checked={field.required}
               onChange={(e) => onUpdate(index, { required: e.target.checked })}
             />
-            必填
+            <span>必填</span>
           </label>
         </div>
       </div>
