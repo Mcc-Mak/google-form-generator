@@ -45,11 +45,35 @@ npm install -g @google/clasp
 
 ### 2.2 登入 Google 帳號
 
+#### 有瀏覽器的環境
+
 ```bash
 clasp login
 ```
 
 瀏覽器會開啟 Google 授權頁面，請以您的 Google 帳號登入並授權 clasp。
+
+#### 無瀏覽器的環境（如遠端 sandbox）
+
+```bash
+clasp login --no-localhost
+```
+
+clasp 會印出一個授權 URL，操作步驟如下：
+
+1. 將該 URL 複製到**任何有瀏覽器的裝置**（手機、筆電等）開啟。
+2. 以 Google 帳號登入並授權。
+3. 授權完成後，Google 會重導至 `http://localhost:8888/?code=...`，瀏覽器會顯示「無法連線」— 這是正常的。
+4. 從瀏覽器網址列**複製完整的重新導向 URL**。
+5. 回到 sandbox，將該 URL 貼回 clasp 的提示。
+
+完成後 `~/.clasprc.json` 會自動產生。執行以下指令確認：
+
+```bash
+cat ~/.clasprc.json
+```
+
+> **重要**：`~/.clasprc.json` 的完整內容即為 GitHub Secret `CLASPRC_JSON` 的值（見 §4.2）。
 
 ### 2.3 建立 `.clasp.json`
 

@@ -2,6 +2,10 @@
 
 本專案版本依 `major.minor.patch` 格式管理。
 
+## 0.3.4
+
+- 更新 `QuickStart.md` 與 `ConfigSettings.md`：新增無瀏覽器環境的 `clasp login --no-localhost` 操作說明。
+
 ## 0.3.3
 
 - 新增 `docbase/ConfigSettings.md`：完整設定參考，涵蓋 GAS 後端、前端、GitHub 儲存庫與 CI/CD pipeline 所有設定項。

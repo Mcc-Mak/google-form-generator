@@ -41,6 +41,20 @@
 
 由 `clasp login` 自動產生，包含 OAuth token 與 client 憑證。CI 環境中透過 GitHub Secret `CLASPRC_JSON` 注入（見 §3.2）。
 
+#### 有瀏覽器的環境
+
+```bash
+clasp login
+```
+
+#### 無瀏覽器的環境（如遠端 sandbox）
+
+```bash
+clasp login --no-localhost
+```
+
+clasp 會印出授權 URL，將其在外部瀏覽器開啟並授權。授權後 Google 重導至 `http://localhost:8888/?code=...`，複製瀏覽器網址列的完整 URL 貼回 clasp 提示即可。
+
 > **安全性提示**：此檔案包含 OAuth refresh token，請勿提交至版本控制系統。
 
 ## 2. 前端設定
