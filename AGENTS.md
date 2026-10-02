@@ -50,6 +50,7 @@ Project: webapp to build a Google Form from a Google Sheet and save it to a spec
 - Promotion is CI-driven, not manual merge: `dev-001 → dev → main`.
 - Do not push directly to `dev` or `main`.
 - Commit messages: concise subject + body that includes the semantic version bump.
+- **Never commit ANY credentials to git** — this includes `.clasp.json`, `~/.clasprc.json`, API keys, tokens, service account JSONs, or any file containing secrets. `.gitignore` must cover these files.
 
 ## GAS deploy
 
