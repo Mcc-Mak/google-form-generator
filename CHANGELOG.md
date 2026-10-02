@@ -2,6 +2,12 @@
 
 本專案版本依 `major.minor.patch` 格式管理。
 
+## 0.3.3
+
+- 新增 `docbase/ConfigSettings.md`：完整設定參考，涵蓋 GAS 後端、前端、GitHub 儲存庫與 CI/CD pipeline 所有設定項。
+- 更新 `TOCTREE.md`：新增 ConfigSettings.md 索引項目。
+- 更新 `AGENTS.md`：必要文件清單新增 `ConfigSettings.md`。
+
 ## 0.3.2
 
 - 簡化 GAS CI 部署的 clasp 認證：以單一 `CLASPRC_JSON` secret 取代 5 個個別 secrets（`CLASPRC_ACCESS_TOKEN` 等），解決空值導致 JSON 缺欄位的錯誤。

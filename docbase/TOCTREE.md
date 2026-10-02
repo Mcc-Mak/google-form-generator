@@ -16,6 +16,7 @@
 | [Schema.md](Schema.md) | 資料結構說明 — 來源試算表標題慣例與 createForm 欄位 payload 結構。 |
 | [ERD.md](ERD.md) | 實體關係圖 — Spreadsheet、Worksheet、Header/Field、Form、FormItem、DriveFolder 之間的關係。 |
 | [QuickStart.md](QuickStart.md) | 快速入門 — 本機預覽、clasp 設定、Web App 部署與 GitHub Pages 設定。 |
+| [ConfigSettings.md](ConfigSettings.md) | 設定說明 — 前端、後端與 CI/CD 所有設定項的完整參考。 |
 | [CRM.md](CRM.md) | 交叉參考矩陣 — 需求、使用者故事與實作模組及文件的對應關係。 |
 | [RTM.md](RTM.md) | 需求追溯矩陣 — 需求 ID 對應使用者故事、設計文件、程式模組與測試驗證點。 |
 
