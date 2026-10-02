@@ -1,11 +1,7 @@
-import { STORAGE_KEY } from './constants'
+import { GAS_WEB_APP_URL } from './constants'
 
 export function getGasUrl() {
-  return localStorage.getItem(STORAGE_KEY) || ''
-}
-
-export function setGasUrl(url) {
-  localStorage.setItem(STORAGE_KEY, url)
+  return GAS_WEB_APP_URL
 }
 
 export async function callGas(payload) {

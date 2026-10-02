@@ -53,7 +53,7 @@ export default function StepSpreadsheets({ spreadsheetId, onSelect, onNext, onBa
           {!loading && items.length === 0 && <option value="">找不到任何試算表</option>}
           {!loading && items.length > 0 && <option value="">請選擇試算表</option>}
           {items.map((item) => (
-            <option key={item.id} value={item.id}>
+            <option key={item.id} value={item.id} title={item.path || item.name}>
               {item.name}
             </option>
           ))}

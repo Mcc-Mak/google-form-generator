@@ -71,7 +71,7 @@ export default function StepFolder({
           {!loading && folders.length === 0 && <option value="">找不到任何資料夾</option>}
           {!loading && folders.length > 0 && <option value="">請選擇資料夾</option>}
           {folders.map((f) => (
-            <option key={f.id} value={f.id}>
+            <option key={f.id} value={f.id} title={f.path || f.name}>
               {f.name}
             </option>
           ))}

@@ -210,6 +210,35 @@ switch (field.type) {
 
 ## 4. API 回應結構
 
+### listSpreadsheets 回傳的試算表項目
+
+```typescript
+interface SpreadsheetItem {
+  id: string;     // 試算表檔案 ID
+  name: string;   // 試算表檔案名稱
+  path: string;   // Drive 完整路徑（如 "My Drive/問卷/客戶問卷"）
+}
+```
+
+### listSheets 回傳的工作表項目
+
+```typescript
+interface SheetItem {
+  name: string;   // 工作表分頁名稱
+  index: number;  // 工作表在試算表中的索引（0-based）
+}
+```
+
+### listFolders 回傳的資料夾項目
+
+```typescript
+interface FolderItem {
+  id: string;     // Drive 資料夾 ID
+  name: string;   // 資料夾名稱
+  path: string;   // Drive 完整路徑（如 "My Drive/表單封存"）
+}
+```
+
 ### getHeaders 回傳的 header 物件
 
 ```typescript

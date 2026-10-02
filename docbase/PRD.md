@@ -42,7 +42,7 @@ flowchart TD
 
 - **目的**：列出所選試算表中的所有工作表分頁名稱。
 - **操作**：使用者從下拉式選單中選擇一個工作表分頁。
-- **GAS Action**：`listSheets` — 透過 `SpreadsheetApp.openById().getSheets()` 取得所有工作表名稱。
+- **GAS Action**：`listSheets` — 透過 `SpreadsheetApp.openById().getSheets()` 取得所有工作表名稱與索引，回傳 `{ name, index }` 物件陣列。
 - **驗證**：必須選擇一個工作表。
 - **備註**：系統將讀取所選工作表的第一列作為欄位標題。
 

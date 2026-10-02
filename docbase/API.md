@@ -24,8 +24,8 @@
 {
   "ok": true,
   "data": [
-    { "id": "1AbCdEfGhIjKlMnOpQrStUvWxYz1234567890", "name": "客戶問卷資料" },
-    { "id": "2BcDeFgHiJkLmNoPqRsTuVwXyZ0987654321a", "name": "員工滿意度調查" }
+    { "id": "1AbCdEfGhIjKlMnOpQrStUvWxYz1234567890", "name": "客戶問卷資料", "path": "My Drive/問卷/客戶問卷資料" },
+    { "id": "2BcDeFgHiJkLmNoPqRsTuVwXyZ0987654321a", "name": "員工滿意度調查", "path": "My Drive/員工滿意度調查" }
   ]
 }
 ```
@@ -45,7 +45,7 @@
 
 ### 說明
 
-列出指定試算表中的所有工作表分頁名稱。透過 `SpreadsheetApp.openById(spreadsheetId).getSheets()` 取得所有工作表，回傳其名稱陣列。
+列出指定試算表中的所有工作表分頁資訊。透過 `SpreadsheetApp.openById(spreadsheetId).getSheets()` 取得所有工作表，回傳 `{ name, index }` 物件陣列。
 
 ### 請求 JSON 範例
 
@@ -61,7 +61,11 @@
 ```json
 {
   "ok": true,
-  "data": ["工作表1", "客戶資料", "問卷結果"]
+  "data": [
+    { "name": "工作表1", "index": 0 },
+    { "name": "客戶資料", "index": 1 },
+    { "name": "問卷結果", "index": 2 }
+  ]
 }
 ```
 
@@ -192,9 +196,9 @@
 {
   "ok": true,
   "data": [
-    { "id": "folder-id-001", "name": "表單封存" },
-    { "id": "folder-id-002", "name": "問卷資料夾" },
-    { "id": "folder-id-003", "name": "2024 調查" }
+    { "id": "folder-id-001", "name": "表單封存", "path": "My Drive/表單封存" },
+    { "id": "folder-id-002", "name": "問卷資料夾", "path": "My Drive/問卷/問卷資料夾" },
+    { "id": "folder-id-003", "name": "2024 調查", "path": "My Drive/2024 調查" }
   ]
 }
 ```

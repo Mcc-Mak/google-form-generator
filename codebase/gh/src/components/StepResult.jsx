@@ -71,7 +71,7 @@ export default function StepResult({ payload, onBack, onRestart }) {
   * { box-sizing: border-box; }
   body {
     font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
-    color: #202124; line-height: 1.5; margin: 0;
+    color: #202124; line-height: 1.5; margin: 0; padding: 10px;
   }
   h1 { font-size: 16pt; margin: 0 0 6pt 0; }
   .form-title {
@@ -109,6 +109,7 @@ export default function StepResult({ payload, onBack, onRestart }) {
 <body>
 <h1>Google \u8868\u55ae\u5efa\u7acb\u7d50\u679c</h1>
 <p class="form-title"><strong>\u8868\u55ae\u6a19\u984c\uff1a</strong>${esc(payload.title || '\uff08\u672a\u547d\u540d\uff09')}</p>
+<p class="form-title"><strong>\u8868\u55ae\u8aaa\u660e\uff1a</strong>${esc(payload.description || '\uff08\u7121\uff09')}</p>
 
 <div class="role-section role-user">
   <h2>\u4e00\u822c\u4f7f\u7528\u8005</h2>

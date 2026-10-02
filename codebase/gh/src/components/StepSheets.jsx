@@ -54,9 +54,13 @@ export default function StepSheets({ spreadsheetId, sheetName, onSelect, onNext,
           {loading && <option value="">載入中…</option>}
           {!loading && items.length === 0 && <option value="">找不到任何工作表</option>}
           {!loading && items.length > 0 && <option value="">請選擇工作表</option>}
-          {items.map((name) => (
-            <option key={name} value={name}>
-              {name}
+          {items.map((item) => (
+            <option
+              key={item.index}
+              value={item.name}
+              title={item.name}
+            >
+              {item.name}
             </option>
           ))}
         </select>

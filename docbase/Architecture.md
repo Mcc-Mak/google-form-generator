@@ -99,11 +99,11 @@ flowchart TD
 
 | 模組 | 檔案 | 職責 |
 |---|---|---|
-| 常數定義 | `src/constants.js` | `STORAGE_KEY`、`QUESTION_TYPES`（8 種問題類型）、`CHOICE_TYPES`（需選項的類型）、`STEP_LABELS` |
-| GAS 通訊 | `src/api.js` | `getGasUrl()`、`setGasUrl()`、`callGas(payload)` — 封裝 fetch POST 與錯誤處理；匯出 `listSpreadsheets`、`listSheets`、`getHeaders`、`listFolders`、`createForm` |
+| 常數定義 | `src/constants.js` | `GAS_WEB_APP_URL`（硬編碼後端網址）、`QUESTION_TYPES`（8 種問題類型）、`CHOICE_TYPES`（需選項的類型）、`STEP_LABELS` |
+| GAS 通訊 | `src/api.js` | `getGasUrl()`、`callGas(payload)` — 封裝 fetch POST 與錯誤處理；匯出 `listSpreadsheets`、`listSheets`、`getHeaders`、`listFolders`、`createForm` |
 | 應用根元件 | `src/App.jsx` | 精靈狀態管理（`useState`）、步驟導覽（`goNext`/`goBack`/`goTo`）、欄位更新、建立表單 payload 組裝 |
 | 步驟指示器 | `src/components/StepIndicators.jsx` | 6 步驟進度指示，可點擊已完成步驟返回 |
-| 步驟一 | `src/components/StepUrl.jsx` | 輸入並驗證 GAS Web App URL，儲存至 `localStorage` |
+| 步驟一 | `src/components/StepUrl.jsx` | 顯示後端服務設定資訊（GAS Web App URL 已硬編碼），無需手動輸入 |
 | 步驟二 | `src/components/StepSpreadsheets.jsx` | 呼叫 `listSpreadsheets`，下拉選擇試算表 |
 | 步驟三 | `src/components/StepSheets.jsx` | 呼叫 `listSheets`，下拉選擇工作表分頁 |
 | 步驟四 | `src/components/StepFields.jsx` | 呼叫 `getHeaders`，渲染欄位卡片（類型、標題、必填、選項編輯器） |

@@ -1,69 +1,36 @@
-import { useState } from 'react'
-import { getGasUrl, setGasUrl } from '../api'
-
 export default function StepUrl({ onNext }) {
-  const [url, setUrl] = useState(getGasUrl())
-  const [msg, setMsg] = useState(null)
-
-  const validate = () => {
-    const trimmed = url.trim()
-    if (!trimmed) {
-      setMsg({ type: 'error', text: '請輸入 GAS Web App URL。' })
-      return false
-    }
-    try {
-      new URL(trimmed)
-    } catch {
-      setMsg({ type: 'error', text: '請輸入有效的網址格式。' })
-      return false
-    }
-    setGasUrl(trimmed)
-    setMsg(null)
-    return true
-  }
-
-  const handleSave = () => {
-    if (validate()) {
-      setMsg({ type: 'success', text: 'GAS Web App URL 已儲存至瀏覽器。' })
-    }
-  }
-
-  const handleNext = () => {
-    if (validate()) onNext()
-  }
-
   return (
     <section className="wizard-step active">
-      <h2>步驟一：輸入 GAS Web App URL</h2>
+      <h2>步驟一：後端服務設定</h2>
       <p className="step-desc">
-        請輸入您的 Google Apps Script Web App 部署網址，此網址將用於所有後端資料操作。
+        本應用已內建 Google Apps Script Web App 後端網址，無需手動設定。
       </p>
-      <div className="form-group">
-        <label htmlFor="gasUrl">GAS Web App URL</label>
-        <input
-          type="url"
-          id="gasUrl"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://script.google.com/macros/s/.../exec"
-          autoComplete="off"
-        />
+
+      <div className="config-info">
+        <h3>後端服務資訊</h3>
+        <dl>
+          <dt>服務名稱</dt>
+          <dd>Google Apps Script Web App</dd>
+          <dt>部署網址</dt>
+          <dd className="config-url">
+            https://script.google.com/macros/s/AKfycbzN09AHK1xRtgOG7AywmiLHown1ltjCTwS-sHpTHTe82bmT3uIQ2O6xlcUrtNw8Pg6gCA/exec
+          </dd>
+          <dt>存取權限</dt>
+          <dd>任何人（匿名）</dd>
+          <dt>執行身分</dt>
+          <dd>部署者</dd>
+        </dl>
+        <p className="config-note">
+          此網址已硬編碼於應用程式中，所有後端資料操作皆透過此網址進行。
+          若需更改後端服務，請聯繫開發人員修改原始碼中的 <code>GAS_WEB_APP_URL</code> 常數。
+        </p>
       </div>
+
       <div className="button-row">
-        <button type="button" className="btn btn-secondary" onClick={handleSave}>
-          儲存網址
-        </button>
-        <button type="button" className="btn btn-primary" onClick={handleNext}>
+        <button type="button" className="btn btn-primary" onClick={onNext}>
           下一步
         </button>
       </div>
-      {msg && (
-        <div className="message-area">
-          <p className={msg.type === 'error' ? 'error-msg' : 'success-msg'}>
-            {msg.text}
-          </p>
-        </div>
-      )}
     </section>
   )
 }

@@ -80,9 +80,43 @@ function routeAction(action, params) {
 // ==================== 處理函式 ====================
 
 /**
+ * 取得檔案在 Google Drive 中的完整路徑。
+ * @param {File} file Drive 檔案物件。
+ * @return {string} 以 / 分隔的路徑，例如「My Drive/子資料資料夾/檔名」。
+ */
+function getFilePath(file) {
+  var parts = [];
+  var parent = file.getParents();
+  while (parent.hasNext()) {
+    var p = parent.next();
+    parts.unshift(p.getName());
+    parent = p.getParents();
+  }
+  parts.push(file.getName());
+  return parts.join('/');
+}
+
+/**
+ * 取得資料夾在 Google Drive 中的完整路徑。
+ * @param {Folder} folder Drive 資料夾物件。
+ * @return {string} 以 / 分隔的路徑，例如「My Drive/子資料夾」。
+ */
+function getFolderPath(folder) {
+  var parts = [];
+  var parent = folder.getParents();
+  while (parent.hasNext()) {
+    var p = parent.next();
+    parts.unshift(p.getName());
+    parent = p.getParents();
+  }
+  parts.push(folder.getName());
+  return parts.join('/');
+}
+
+/**
  * 列出 Google Drive 中所有試算表檔案。
  * @param {Object} _params （未使用）
- * @return {Object} { ok: true, data: [{ id, name }] }
+ * @return {Object} { ok: true, data: [{ id, name, path }] }
  */
 function handleListSpreadsheets(_params) {
   try {
@@ -90,7 +124,7 @@ function handleListSpreadsheets(_params) {
     var data = [];
     while (files.hasNext()) {
       var file = files.next();
-      data.push({ id: file.getId(), name: file.getName() });
+      data.push({ id: file.getId(), name: file.getName(), path: getFilePath(file) });
     }
     return { ok: true, data: data };
   } catch (e) {
@@ -99,16 +133,17 @@ function handleListSpreadsheets(_params) {
 }
 
 /**
- * 列出指定試算表中的所有工作表分頁名稱。
+ * 列出指定試算表中的所有工作表分頁資訊。
  * @param {Object} params 需包含 spreadsheetId。
- * @return {Object} { ok: true, data: string[] }
+ * @return {Object} { ok: true, data: [{ name, index }] }
  */
 function handleListSheets(params) {
   try {
     var spreadsheetId = params.spreadsheetId;
-    var sheets = SpreadsheetApp.openById(spreadsheetId).getSheets();
-    var data = sheets.map(function (sheet) {
-      return sheet.getName();
+    var ss = SpreadsheetApp.openById(spreadsheetId);
+    var sheets = ss.getSheets();
+    var data = sheets.map(function (sheet, i) {
+      return { name: sheet.getName(), index: i };
     });
     return { ok: true, data: data };
   } catch (e) {
@@ -223,13 +258,18 @@ function handleGetQuestions(params) {
  * @param {Object} _params （未使用）
  * @return {Object} { ok: true, data: [{ id, name }] }
  */
+/**
+ * 列出 Google Drive 中所有資料夾。
+ * @param {Object} _params （未使用）
+ * @return {Object} { ok: true, data: [{ id, name, path }] }
+ */
 function handleListFolders(_params) {
   try {
     var folders = DriveApp.getFolders();
     var data = [];
     while (folders.hasNext()) {
       var folder = folders.next();
-      data.push({ id: folder.getId(), name: folder.getName() });
+      data.push({ id: folder.getId(), name: folder.getName(), path: getFolderPath(folder) });
     }
     return { ok: true, data: data };
   } catch (e) {

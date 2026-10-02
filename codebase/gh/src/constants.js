@@ -1,5 +1,8 @@
 export const STORAGE_KEY = 'gasWebAppUrl'
 
+export const GAS_WEB_APP_URL =
+  'https://script.google.com/macros/s/AKfycbzN09AHK1xRtgOG7AywmiLHown1ltjCTwS-sHpTHTe82bmT3uIQ2O6xlcUrtNw8Pg6gCA/exec'
+
 export const QUESTION_TYPES = [
   { label: '簡答', value: '簡答' },
   { label: '段落', value: '段落' },

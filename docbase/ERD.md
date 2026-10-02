@@ -57,6 +57,7 @@ erDiagram
 |---|---|---|
 | `id` | string (PK) | Google 試算表檔案 ID，由 `DriveApp.searchFiles` 取得 |
 | `name` | string | 試算表檔案名稱 |
+| `path` | string | Drive 完整路徑（如 "My Drive/問卷/客戶問卷"） |
 
 - 來源：`listSpreadsheets` action 回傳的 `data` 陣列元素。
 - 一個試算表包含多個工作表 (Worksheet)。
@@ -66,9 +67,10 @@ erDiagram
 | 屬性 | 型別 | 說明 |
 |---|---|---|
 | `name` | string (PK) | 工作表分頁名稱 |
+| `index` | number | 工作表在試算表中的索引（0-based） |
 | `spreadsheetId` | string (FK) | 所屬試算表 ID |
 
-- 來源：`listSheets` action 回傳的 `data` 字串陣列。
+- 來源：`listSheets` action 回傳的 `data` 物件陣列（`{ name, index }`）。
 - 一個工作表的第一列包含多個欄位標題 (Header)。
 
 ### Header（欄位標題）
@@ -125,6 +127,7 @@ erDiagram
 |---|---|---|
 | `id` | string (PK) | Google Drive 資料夾 ID |
 | `name` | string | 資料夾名稱 |
+| `path` | string | Drive 完整路徑（如 "My Drive/表單封存"） |
 
 - 來源：`listFolders` action 回傳的 `data` 陣列元素。
 - 一個 DriveFolder 可儲存多個表單 (Form)。
