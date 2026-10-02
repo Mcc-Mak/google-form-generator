@@ -2,6 +2,10 @@
 
 本專案版本依 `major.minor.patch` 格式管理。
 
+## 0.3.5
+
+- 修正 CORS 問題：前端 fetch 改用 `Content-Type: text/plain;charset=utf-8` 避免 preflight OPTIONS 請求，GAS Web App 不支援 OPTIONS 預檢。
+
 ## 0.3.4
 
 - 更新 `QuickStart.md` 與 `ConfigSettings.md`：新增無瀏覽器環境的 `clasp login --no-localhost` 操作說明。
