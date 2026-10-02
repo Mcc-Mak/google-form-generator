@@ -80,51 +80,62 @@ function routeAction(action, params) {
 // ==================== 處理函式 ====================
 
 /**
- * 取得檔案在 Google Drive 中的完整路徑。
- * @param {File} file Drive 檔案物件。
- * @return {string} 以 / 分隔的路徑，例如「My Drive/子資料資料夾/檔名」。
+ * 建立全 Drive 資料夾路徑快取。
+ * 一次遍歷所有資料夾，後續路徑解析不需額外 API 呼叫。
+ * @return {Object} { folderId: { name: string, parentId: string|null } }
  */
-function getFilePath(file) {
-  var parts = [];
-  var parent = file.getParents();
-  while (parent.hasNext()) {
-    var p = parent.next();
-    parts.unshift(p.getName());
-    parent = p.getParents();
+function buildFolderMap() {
+  var map = {};
+  var folders = DriveApp.searchFiles('mimeType = "application/vnd.google-apps.folder"');
+  while (folders.hasNext()) {
+    var f = folders.next();
+    var id = f.getId();
+    var parents = f.getParents();
+    map[id] = {
+      name: f.getName(),
+      parentId: parents.hasNext() ? parents.next().getId() : null
+    };
   }
-  parts.push(file.getName());
-  return parts.join('/');
+  return map;
 }
 
 /**
- * 取得資料夾在 Google Drive 中的完整路徑。
- * @param {Folder} folder Drive 資料夾物件。
- * @return {string} 以 / 分隔的路徑，例如「My Drive/子資料夾」。
+ * 從快取解析資料夾完整路徑（無 API 呼叫）。
+ * @param {string} folderId 資料夾 ID。
+ * @param {Object} folderMap buildFolderMap() 結果。
+ * @return {string} 以 / 分隔的路徑。
  */
-function getFolderPath(folder) {
+function resolveFolderPath(folderId, folderMap) {
   var parts = [];
-  var parent = folder.getParents();
-  while (parent.hasNext()) {
-    var p = parent.next();
-    parts.unshift(p.getName());
-    parent = p.getParents();
+  var visited = {};
+  var current = folderId;
+  while (current && folderMap[current] && !visited[current]) {
+    visited[current] = true;
+    parts.unshift(folderMap[current].name);
+    current = folderMap[current].parentId;
   }
-  parts.push(folder.getName());
   return parts.join('/');
 }
 
 /**
  * 列出 Google Drive 中所有試算表檔案。
+ * 使用資料夾快取避免逐檔走訪父層鏈，大幅加速路徑計算。
  * @param {Object} _params （未使用）
  * @return {Object} { ok: true, data: [{ id, name, path }] }
  */
 function handleListSpreadsheets(_params) {
   try {
+    var folderMap = buildFolderMap();
     var files = DriveApp.searchFiles('mimeType = "application/vnd.google-apps.spreadsheet"');
     var data = [];
     while (files.hasNext()) {
       var file = files.next();
-      data.push({ id: file.getId(), name: file.getName(), path: getFilePath(file) });
+      var parents = file.getParents();
+      var parentId = parents.hasNext() ? parents.next().getId() : null;
+      var path = parentId
+        ? resolveFolderPath(parentId, folderMap) + '/' + file.getName()
+        : file.getName();
+      data.push({ id: file.getId(), name: file.getName(), path: path });
     }
     return { ok: true, data: data };
   } catch (e) {
@@ -254,22 +265,21 @@ function handleGetQuestions(params) {
 }
 
 /**
- * 列出 Google Drive 根目錄下的所有資料夾。
- * @param {Object} _params （未使用）
- * @return {Object} { ok: true, data: [{ id, name }] }
- */
-/**
  * 列出 Google Drive 中所有資料夾。
+ * 使用資料夾快取避免逐資料夾走訪父層鏈。
  * @param {Object} _params （未使用）
  * @return {Object} { ok: true, data: [{ id, name, path }] }
  */
 function handleListFolders(_params) {
   try {
-    var folders = DriveApp.getFolders();
+    var folderMap = buildFolderMap();
     var data = [];
-    while (folders.hasNext()) {
-      var folder = folders.next();
-      data.push({ id: folder.getId(), name: folder.getName(), path: getFolderPath(folder) });
+    for (var id in folderMap) {
+      data.push({
+        id: id,
+        name: folderMap[id].name,
+        path: resolveFolderPath(id, folderMap)
+      });
     }
     return { ok: true, data: data };
   } catch (e) {
@@ -370,35 +380,54 @@ function handleCreateForm(params) {
       ? 'https://docs.google.com/spreadsheets/d/' + spreadsheetId + '/edit'
       : '';
 
+    var shortViewUrl = publishedUrl;
+    var shortSpreadsheetUrl = spreadsheetUrl;
+
+    var fetchRequests = [];
+    var fetchKeys = [];
+    if (publishedUrl) {
+      fetchRequests.push({
+        url: 'https://is.gd/create.php?format=json&url=' + encodeURIComponent(publishedUrl),
+        muteHttpExceptions: true
+      });
+      fetchKeys.push('view');
+    }
+    if (spreadsheetUrl) {
+      fetchRequests.push({
+        url: 'https://is.gd/create.php?format=json&url=' + encodeURIComponent(spreadsheetUrl),
+        muteHttpExceptions: true
+      });
+      fetchKeys.push('sheet');
+    }
+
+    if (fetchRequests.length > 0) {
+      var responses = UrlFetchApp.fetchAll(fetchRequests);
+      for (var j = 0; j < responses.length; j++) {
+        try {
+          var json = JSON.parse(responses[j].getContentText());
+          if (fetchKeys[j] === 'view') {
+            shortViewUrl = json.shorturl || publishedUrl;
+          } else {
+            shortSpreadsheetUrl = json.shorturl || spreadsheetUrl;
+          }
+        } catch (err) {
+          // 保持原始 URL
+        }
+      }
+    }
+
     return {
       ok: true,
       data: {
         formId: form.getId(),
         editUrl: editUrl,
         publishedUrl: publishedUrl,
-        shortViewUrl: shortenUrl(publishedUrl),
+        shortViewUrl: shortViewUrl,
         spreadsheetUrl: spreadsheetUrl,
-        shortSpreadsheetUrl: spreadsheetUrl ? shortenUrl(spreadsheetUrl) : ''
+        shortSpreadsheetUrl: shortSpreadsheetUrl
       }
     };
   } catch (e) {
     return { ok: false, error: e.message };
-  }
-}
-
-/**
- * 使用 is.gd 免費短網址服務縮短 URL。
- * 失敗時回傳原始 URL。
- */
-function shortenUrl(url) {
-  try {
-    var response = UrlFetchApp.fetch(
-      'https://is.gd/create.php?format=json&url=' + encodeURIComponent(url),
-      { muteHttpExceptions: true }
-    );
-    var json = JSON.parse(response.getContentText());
-    return json.shorturl || url;
-  } catch (e) {
-    return url;
   }
 }

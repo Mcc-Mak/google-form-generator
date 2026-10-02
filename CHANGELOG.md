@@ -2,6 +2,14 @@
 
 本專案版本依 `major.minor.patch` 格式管理。
 
+## 0.5.6
+
+- **API 效能大幅優化**：
+  - `listSpreadsheets` / `listFolders` 改用資料夾路徑快取（`buildFolderMap`），一次遍歷所有資料夾後路徑解析零 API 呼叫。舊方式逐檔走訪父層鏈，N 個檔案 × D 層深度 = O(N×D) 次 API 呼叫；新方式降為 O(N+M)（N 試算表 + M 資料夾，各僅 1 次 `getParents`）。
+  - `createForm` 的兩次 is.gd 短網址請求改用 `UrlFetchApp.fetchAll` 並行送出，節省約一半等待時間。
+  - 移除已不再使用的 `getFilePath`、`getFolderPath`、`shortenUrl` 函式。
+  - `listFolders` 現在回傳所有層級資料夾（舊版僅回傳根目錄第一層）。
+
 ## 0.5.5
 
 - **SonarCloud 問題修復**：修復 26 項 SonarCloud 開放議題，涵蓋前端 React 元件與 GitHub Actions 工作流程：
