@@ -383,9 +383,14 @@ function buildPdfHtml(params, qrImgTag) {
   };
 
   var urlItem = function (label, value) {
+    var v = value || '（無）';
+    var display = esc(v);
+    var content = v === '（無）'
+      ? '<span style="font-size:9pt;font-family:monospace">' + display + '</span>'
+      : '<a href="' + display + '" style="font-size:9pt;font-family:monospace">' + display + '</a>';
     return '<div style="margin:6px 0">' +
       '<div style="font-size:9pt;font-weight:bold;color:#5f6368">' + esc(label) + '</div>' +
-      '<div style="font-size:9pt;font-family:monospace">' + esc(value || '（無）') + '</div>' +
+      '<div>' + content + '</div>' +
       '</div>';
   };
 
