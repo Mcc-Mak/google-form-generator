@@ -1,15 +1,12 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { createForm } from '../api'
 import { QRCodeCanvas } from 'qrcode.react'
 import Swal from 'sweetalert2'
-import jsPDF from 'jspdf'
-import html2canvas from 'html2canvas'
 
 export default function StepResult({ payload, onBack, onRestart }) {
   const [status, setStatus] = useState('idle')
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
-  const summaryRef = useRef(null)
 
   const handleCreate = async () => {
     Swal.fire({
@@ -46,74 +43,114 @@ export default function StepResult({ payload, onBack, onRestart }) {
     }
   }
 
-  const getTimestamp = () => {
-    const now = new Date()
-    const pad = (n) => String(n).padStart(2, '0')
-    return (
-      now.getFullYear().toString() +
-      pad(now.getMonth() + 1) +
-      pad(now.getDate()) +
-      pad(now.getHours()) +
-      pad(now.getMinutes()) +
-      pad(now.getSeconds())
-    )
-  }
-
-  const exportPDF = async () => {
-    if (!summaryRef.current) return
-    Swal.fire({
-      title: '正在匯出 PDF…',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      showConfirmButton: false,
-      didOpen: () => Swal.showLoading(),
-    })
-    try {
-      const canvas = await html2canvas(summaryRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        onclone: (documentClone) => {
-          const qrCanvas = documentClone.querySelector('.qr-wrapper canvas')
-          if (qrCanvas) {
-            const img = documentClone.createElement('img')
-            img.src = qrCanvas.toDataURL('image/png')
-            img.style.width = '180px'
-            img.style.height = '180px'
-            qrCanvas.parentNode.replaceChild(img, qrCanvas)
-          }
-        },
-      })
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF('p', 'mm', 'a4')
-      const pageWidth = pdf.internal.pageSize.getWidth()
-      const pageHeight = pdf.internal.pageSize.getHeight()
-      const imgWidth = pageWidth
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
-
-      let heightLeft = imgHeight
-      let position = 0
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight
-        pdf.addPage()
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-        heightLeft -= pageHeight
-      }
-
-      pdf.save('GoogleForm-PDF-' + getTimestamp() + '.pdf')
-      Swal.close()
-    } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: '匯出失敗',
-        text: err.message,
-        confirmButtonText: '確定',
-      })
+  const exportPDF = () => {
+    let qrImgData = ''
+    const canvasEl = document.querySelector('.qr-wrapper canvas')
+    if (canvasEl) {
+      qrImgData = canvasEl.toDataURL('image/png')
     }
+
+    const esc = (s) =>
+      String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+    const urlItem = (label, value, isLink) => {
+      const v = esc(value)
+      const content = isLink
+        ? `<a href="${v}">${v}</a>`
+        : `<span class="value">${v}</span>`
+      return `<div class="url-item"><label>${esc(label)}</label>${content}</div>`
+    }
+
+    const html = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>Google \u8868\u55ae\u5efa\u7acb\u7d50\u679c</title>
+<style>
+  @page { size: A4; margin: 15mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    color: #202124; line-height: 1.5; margin: 0;
+  }
+  h1 { font-size: 16pt; margin: 0 0 6pt 0; }
+  .form-title {
+    font-size: 11pt; margin-bottom: 16pt; padding: 6pt 8pt;
+    background: #f8f9fa; border: 1px solid #dadce0; border-radius: 4pt;
+  }
+  .role-section { margin-bottom: 16pt; }
+  .role-section h2 {
+    font-size: 12pt; padding: 5pt 8pt; color: #fff;
+    border-radius: 4pt; margin: 0 0 8pt 0;
+  }
+  .role-user h2 { background: #1a73e8; }
+  .role-maintainer h2 { background: #1e8e3e; }
+  .role-developer h2 { background: #5f6368; }
+  .url-item { margin: 6pt 0; }
+  .url-item label {
+    display: block; font-size: 8pt; font-weight: bold;
+    color: #5f6368; margin-bottom: 2pt;
+  }
+  .url-item a {
+    font-size: 8pt; color: #1a73e8; text-decoration: underline;
+    white-space: nowrap; font-family: monospace;
+  }
+  .url-item .value {
+    font-size: 8pt; font-family: monospace; white-space: nowrap;
+  }
+  .qr-section { margin-top: 8pt; }
+  .qr-section label {
+    display: block; font-size: 8pt; font-weight: bold;
+    color: #5f6368; margin-bottom: 4pt;
+  }
+  .qr-section img { width: 140pt; height: 140pt; }
+</style>
+</head>
+<body>
+<h1>Google \u8868\u55ae\u5efa\u7acb\u7d50\u679c</h1>
+<p class="form-title"><strong>\u8868\u55ae\u6a19\u984c\uff1a</strong>${esc(payload.title || '\uff08\u672a\u547d\u540d\uff09')}</p>
+
+<div class="role-section role-user">
+  <h2>\u4e00\u822c\u4f7f\u7528\u8005</h2>
+  ${urlItem('\u8868\u55ae\u9023\u7d50\uff08\u5b8c\u6574\u7db2\u5740\uff09', result.publishedUrl, true)}
+  ${urlItem('\u8868\u55ae\u9023\u7d50\uff08\u77ed\u7db2\u5740\uff09', result.shortViewUrl, true)}
+  ${qrImgData ? `<div class="qr-section"><label>QR Code\uff08\u77ed\u7db2\u5740\uff09</label><img src="${qrImgData}" /></div>` : ''}
+</div>
+
+<div class="role-section role-maintainer">
+  <h2>\u7dad\u8b77\u4eba\u54e1</h2>
+  ${urlItem('\u8868\u55ae\u7de8\u8f2f\u9023\u7d50\uff08\u5b8c\u6574\u7db2\u5740\uff09', result.editUrl, true)}
+  ${urlItem('\u8868\u55ae\u9023\u7d50\uff08\u5b8c\u6574\u7db2\u5740\uff09', result.publishedUrl, true)}
+  ${urlItem('\u8868\u55ae\u9023\u7d50\uff08\u77ed\u7db2\u5740\uff09', result.shortViewUrl, true)}
+</div>
+
+<div class="role-section role-developer">
+  <h2>\u958b\u767c\u4eba\u54e1</h2>
+  ${urlItem('\u8868\u55ae\u9023\u7d50\uff08\u77ed\u7db2\u5740\uff09', result.shortViewUrl, true)}
+  ${urlItem('\u8a66\u7b97\u8868\u9023\u7d50\uff08\u77ed\u7db2\u5740\uff09', result.shortSpreadsheetUrl, true)}
+  ${urlItem('\u8868\u55ae ID', result.formId, false)}
+</div>
+</body>
+</html>`
+
+    const iframe = document.createElement('iframe')
+    iframe.style.position = 'fixed'
+    iframe.style.right = '0'
+    iframe.style.bottom = '0'
+    iframe.style.width = '0'
+    iframe.style.height = '0'
+    iframe.style.border = '0'
+    document.body.appendChild(iframe)
+
+    iframe.contentDocument.open()
+    iframe.contentDocument.write(html)
+    iframe.contentDocument.close()
+
+    setTimeout(() => {
+      iframe.contentWindow.focus()
+      iframe.contentWindow.print()
+      setTimeout(() => document.body.removeChild(iframe), 1000)
+    }, 300)
   }
 
   if (status === 'idle') {
@@ -160,7 +197,7 @@ export default function StepResult({ payload, onBack, onRestart }) {
         <h2>表單建立結果</h2>
         <p className="step-desc">表單已成功建立，以下為各角色所需的連結資訊。</p>
 
-        <div className="result-summary" ref={summaryRef}>
+        <div className="result-summary">
           <div className="result-form-title">
             <strong>表單標題：</strong>{payload.title || '（未命名）'}
           </div>
