@@ -2,6 +2,20 @@
 
 本專案版本依 `major.minor.patch` 格式管理。
 
+## 0.5.0
+
+- **步驟六結果頁全面改版**：表單建立成功後顯示分角色摘要頁面，包含：
+  - **一般使用者**：表單連結（完整網址）、表單連結（短網址）、QR Code（短網址）
+  - **維護人員**：表單編輯連結（完整網址）、表單連結（完整網址）、表單連結（短網址）
+  - **開發人員**：表單連結（短網址）、試算表連結（短網址）、表單 ID
+- **SweetAlert2 載入彈窗**：點擊「建立表單」時顯示不可關閉的載入彈窗，建立完成後自動關閉。
+- **PDF 匯出功能**：摘要頁面提供「匯出 PDF」按鈕，檔名格式為 `GoogleForm-PDF-${yyyymmddHHMMSS}.pdf`，使用 html2canvas + jsPDF 實作。
+- **QR Code 產生**：使用 qrcode.react 產生短網址的 QR Code。
+- **短網址支援**：GAS 後端新增 `shortenUrl` 函式，透過 is.gd 免費服務縮短 URL。`createForm` 回傳新增 `shortViewUrl`、`spreadsheetUrl`、`shortSpreadsheetUrl`。
+- **createForm 新增 spreadsheetId 參數**：前端傳入來源試算表 ID，後端據此產生試算表連結。
+- 新增前端相依套件：sweetalert2、qrcode.react、jspdf、html2canvas。
+- 更新文件：API.md（createForm 回應欄位）、Schema.md（CreateFormResult 結構）。
+
 ## 0.4.1
 
 - 修正 GAS CI：`clasp push` 後新增 `clasp deploy` 步驟，自動更新 Web App 部署版本，解決 push 程式碼但 `/exec` URL 仍指向舊版本的問題。

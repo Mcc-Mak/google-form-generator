@@ -259,6 +259,7 @@ function handleCreateForm(params) {
     var description = params.description;
     var folderId = params.folderId;
     var fields = params.fields;
+    var spreadsheetId = params.spreadsheetId;
 
     var form = FormApp.create(title);
     form.setDescription(description);
@@ -323,15 +324,41 @@ function handleCreateForm(params) {
     var formFile = DriveApp.getFileById(form.getId());
     formFile.moveTo(DriveApp.getFolderById(folderId));
 
+    var editUrl = form.getEditUrl();
+    var publishedUrl = form.getPublishedUrl();
+    var spreadsheetUrl = spreadsheetId
+      ? 'https://docs.google.com/spreadsheets/d/' + spreadsheetId + '/edit'
+      : '';
+
     return {
       ok: true,
       data: {
         formId: form.getId(),
-        editUrl: form.getEditUrl(),
-        publishedUrl: form.getPublishedUrl()
+        editUrl: editUrl,
+        publishedUrl: publishedUrl,
+        shortViewUrl: shortenUrl(publishedUrl),
+        spreadsheetUrl: spreadsheetUrl,
+        shortSpreadsheetUrl: spreadsheetUrl ? shortenUrl(spreadsheetUrl) : ''
       }
     };
   } catch (e) {
     return { ok: false, error: e.message };
+  }
+}
+
+/**
+ * 使用 is.gd 免費短網址服務縮短 URL。
+ * 失敗時回傳原始 URL。
+ */
+function shortenUrl(url) {
+  try {
+    var response = UrlFetchApp.fetch(
+      'https://is.gd/create.php?format=json&url=' + encodeURIComponent(url),
+      { muteHttpExceptions: true }
+    );
+    var json = JSON.parse(response.getContentText());
+    return json.shorturl || url;
+  } catch (e) {
+    return url;
   }
 }

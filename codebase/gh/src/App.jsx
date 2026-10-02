@@ -104,6 +104,7 @@ export default function App() {
       title: wiz.formTitle,
       description: wiz.formDescription,
       folderId: wiz.folderId,
+      spreadsheetId: wiz.spreadsheetId,
       fields,
     }
   }, [wiz])

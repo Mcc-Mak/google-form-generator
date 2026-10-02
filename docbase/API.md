@@ -233,6 +233,7 @@
   "title": "客戶滿意度調查",
   "description": "請填寫以下問卷，我們將根據您的回饋持續改進服務品質。",
   "folderId": "folder-id-001",
+  "spreadsheetId": "1AbCdEfGhIjKlMnOpQrStUvWxYz1234567890",
   "fields": [
     {
       "title": "姓名",
@@ -289,10 +290,24 @@
   "data": {
     "formId": "1AbCdEfGhIjKlMnOpQrStUvWxYz1234567890",
     "editUrl": "https://docs.google.com/forms/d/1AbCdEfGhIjKlMnOpQrStUvWxYz1234567890/edit",
-    "publishedUrl": "https://docs.google.com/forms/d/e/1FAIpQLSf.../viewform"
+    "publishedUrl": "https://docs.google.com/forms/d/e/1FAIpQLSf.../viewform",
+    "shortViewUrl": "https://is.gd/abc1234",
+    "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1AbCdEfGhIjKlMnOpQrStUvWxYz1234567890/edit",
+    "shortSpreadsheetUrl": "https://is.gd/def5678"
   }
 }
 ```
+
+### 回應欄位說明
+
+| 欄位 | 說明 |
+|---|---|
+| `formId` | 建立的 Google 表單 ID |
+| `editUrl` | 表單編輯連結（完整網址） |
+| `publishedUrl` | 表單檢視連結（完整網址） |
+| `shortViewUrl` | 表單檢視連結（短網址，透過 is.gd 縮短） |
+| `spreadsheetUrl` | 來源試算表連結（完整網址） |
+| `shortSpreadsheetUrl` | 來源試算表連結（短網址，透過 is.gd 縮短） |
 
 ### 錯誤回應範例
 

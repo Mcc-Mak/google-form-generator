@@ -223,9 +223,12 @@ interface Header {
 
 ```typescript
 interface CreateFormResult {
-  formId: string;        // 建立的 Google 表單 ID
-  editUrl: string;       // 表單編輯連結
-  publishedUrl: string;  // 表單發布連結
+  formId: string;               // 建立的 Google 表單 ID
+  editUrl: string;              // 表單編輯連結（完整網址）
+  publishedUrl: string;         // 表單檢視連結（完整網址）
+  shortViewUrl: string;         // 表單檢視連結（短網址，is.gd）
+  spreadsheetUrl: string;       // 來源試算表連結（完整網址）
+  shortSpreadsheetUrl: string;  // 來源試算表連結（短網址，is.gd）
 }
 ```
 
