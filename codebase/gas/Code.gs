@@ -13,8 +13,7 @@ var ACTIONS = {
   GET_HEADERS: 'getHeaders',
   GET_QUESTIONS: 'getQuestions',
   LIST_FOLDERS: 'listFolders',
-  CREATE_FORM: 'createForm',
-  DEBUG_FOLDERS: 'debugFolders'
+  CREATE_FORM: 'createForm'
 };
 
 // ==================== HTTP 端點 ====================
@@ -73,8 +72,6 @@ function routeAction(action, params) {
       return handleListFolders(params);
     case ACTIONS.CREATE_FORM:
       return handleCreateForm(params);
-    case ACTIONS.DEBUG_FOLDERS:
-      return handleDebugFolders(params);
     default:
       return { ok: false, error: '未知的動作：' + action };
   }
@@ -281,22 +278,69 @@ function handleGetQuestions(params) {
 
 /**
  * 列出 Google Drive 中所有資料夾。
- * 使用資料夾快取避免逐資料夾走訪父層鏈。
+ * 使用 Drive REST API 取得所有資料夾及其父層 ID，再從本地 map 解析路徑。
+ * （DriveApp.searchFiles 無法列舉資料夾，改用 Drive API v3 files.list）
  * @param {Object} _params （未使用）
  * @return {Object} { ok: true, data: [{ id, name, path }] }
  */
 function handleListFolders(_params) {
   try {
-    var folders = DriveApp.searchFiles('mimeType = "application/vnd.google-apps.folder"');
+    var token = ScriptApp.getOAuthToken();
+    var allFolders = [];
+    var pageToken = null;
+
+    do {
+      var url = 'https://www.googleapis.com/drive/v3/files?q=' +
+        encodeURIComponent("mimeType='application/vnd.google-apps.folder' and trashed=false") +
+        '&pageSize=1000&fields=files(id,name,parents),nextPageToken';
+      if (pageToken) {
+        url += '&pageToken=' + encodeURIComponent(pageToken);
+      }
+      var response = UrlFetchApp.fetch(url, {
+        headers: { Authorization: 'Bearer ' + token },
+        muteHttpExceptions: true
+      });
+      var json = JSON.parse(response.getContentText());
+      allFolders = allFolders.concat(json.files || []);
+      pageToken = json.nextPageToken;
+    } while (pageToken);
+
+    var folderMap = {};
+    for (var i = 0; i < allFolders.length; i++) {
+      var f = allFolders[i];
+      folderMap[f.id] = {
+        name: f.name,
+        parentId: (f.parents && f.parents.length > 0) ? f.parents[0] : null
+      };
+    }
+
     var data = [];
-    while (folders.hasNext()) {
-      var folder = folders.next();
-      data.push({ id: folder.getId(), name: folder.getName(), path: getFolderPathCached(folder) });
+    for (var j = 0; j < allFolders.length; j++) {
+      var folder = allFolders[j];
+      data.push({ id: folder.id, name: folder.name, path: resolvePathFromMap(folder.id, folderMap) });
     }
     return { ok: true, data: data };
   } catch (e) {
     return { ok: false, error: e.message };
   }
+}
+
+/**
+ * 從資料夾 map 解析完整路徑（無 API 呼叫）。
+ * @param {string} folderId 資料夾 ID。
+ * @param {Object} folderMap { id: { name, parentId } }
+ * @return {string} 以 / 分隔的路徑。
+ */
+function resolvePathFromMap(folderId, folderMap) {
+  var parts = [];
+  var visited = {};
+  var current = folderId;
+  while (current && folderMap[current] && !visited[current]) {
+    visited[current] = true;
+    parts.unshift(folderMap[current].name);
+    current = folderMap[current].parentId;
+  }
+  return parts.join('/');
 }
 
 /**
@@ -442,57 +486,4 @@ function handleCreateForm(params) {
   } catch (e) {
     return { ok: false, error: e.message };
   }
-}
-
-/**
- * 診斷函式：測試不同方式列舉資料夾。
- */
-function handleDebugFolders(_params) {
-  var result = {};
-
-  try {
-    var folders1 = DriveApp.searchFiles('mimeType = "application/vnd.google-apps.folder"');
-    var count1 = 0;
-    var sample1 = [];
-    while (folders1.hasNext()) {
-      var f = folders1.next();
-      count1++;
-      if (sample1.length < 5) {
-        sample1.push({ id: f.getId(), name: f.getName() });
-      }
-    }
-    result.searchFiles = { count: count1, sample: sample1 };
-  } catch (e) {
-    result.searchFiles = { error: e.message };
-  }
-
-  try {
-    var folders2 = DriveApp.getFolders();
-    var count2 = 0;
-    var sample2 = [];
-    while (folders2.hasNext()) {
-      var f2 = folders2.next();
-      count2++;
-      if (sample2.length < 5) {
-        sample2.push({ id: f2.getId(), name: f2.getName() });
-      }
-    }
-    result.getFolders = { count: count2, sample: sample2 };
-  } catch (e) {
-    result.getFolders = { error: e.message };
-  }
-
-  try {
-    var folders3 = DriveApp.searchFiles("mimeType = 'application/vnd.google-apps.folder'");
-    var count3 = 0;
-    while (folders3.hasNext()) {
-      folders3.next();
-      count3++;
-    }
-    result.searchFilesSingleQuote = { count: count3 };
-  } catch (e) {
-    result.searchFilesSingleQuote = { error: e.message };
-  }
-
-  return { ok: true, data: result };
 }

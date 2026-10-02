@@ -6,6 +6,7 @@
 
 - **修正路徑計算錯誤**：`listSpreadsheets` / `listFolders` 的 `path` 欄位因 `buildFolderMap` 依賴 `searchFiles` 回傳所有資料夾，若部分資料夾未在結果中則路徑鏈斷裂，產生不完整或錯誤的路徑。改回以 `getParents()` 走訪實際 Drive 父層鏈（保證正確），同時加入 `_folderPathCache` 路徑快取，共用祖先的資料夾僅需 1 次 API 呼叫即可命中快取，兼顧正確性與效能。
 - 移除 `buildFolderMap` / `resolveFolderPath`，新增 `getFolderPathCached` / `getFilePathCached`。
+- **修正 `listFolders` 回傳空陣列**：`DriveApp.searchFiles` 無法列舉資料夾（GAS 已知限制），改用 Drive REST API v3 `files.list` 透過 `UrlFetchApp` + `ScriptApp.getOAuthToken()` 取得所有資料夾及其父層 ID，再從本地 map 解析路徑。
 
 ## 0.5.6
 
