@@ -80,41 +80,59 @@ function routeAction(action, params) {
 // ==================== 處理函式 ====================
 
 /**
- * 建立全 Drive 資料夾路徑快取。
- * 一次遍歷所有資料夾，後續路徑解析不需額外 API 呼叫。
- * @return {Object} { folderId: { name: string, parentId: string|null } }
+ * 資料夾路徑快取（單次請求生命週期）。
+ * key: folderId, value: 完整路徑字串。
  */
-function buildFolderMap() {
-  var map = {};
-  var folders = DriveApp.searchFiles('mimeType = "application/vnd.google-apps.folder"');
-  while (folders.hasNext()) {
-    var f = folders.next();
-    var id = f.getId();
-    var parents = f.getParents();
-    map[id] = {
-      name: f.getName(),
-      parentId: parents.hasNext() ? parents.next().getId() : null
-    };
+var _folderPathCache = {};
+
+/**
+ * 取得資料夾的完整路徑，使用快取避免重複走訪相同父層鏈。
+ * 每個資料夾僅需 1 次 getParents() API 呼叫；共用祖先的自動命中快取。
+ * @param {Folder} folder Drive 資料夾物件（或代表資料夾的 File 物件）。
+ * @return {string} 以 / 分隔的路徑，例如「My Drive/子資料夾」。
+ */
+function getFolderPathCached(folder) {
+  var startId = folder.getId();
+  if (_folderPathCache[startId]) return _folderPathCache[startId];
+
+  var chain = [];
+  var visited = {};
+  var current = folder;
+  var cachedPrefix = null;
+
+  while (current) {
+    var cid = current.getId();
+    if (visited[cid]) break;
+    visited[cid] = true;
+
+    if (_folderPathCache[cid]) {
+      cachedPrefix = _folderPathCache[cid];
+      break;
+    }
+
+    chain.unshift({ id: cid, name: current.getName() });
+    var parents = current.getParents();
+    current = parents.hasNext() ? parents.next() : null;
   }
-  return map;
+
+  var prefix = cachedPrefix || '';
+  for (var i = 0; i < chain.length; i++) {
+    prefix = prefix ? prefix + '/' + chain[i].name : chain[i].name;
+    _folderPathCache[chain[i].id] = prefix;
+  }
+
+  return prefix;
 }
 
 /**
- * 從快取解析資料夾完整路徑（無 API 呼叫）。
- * @param {string} folderId 資料夾 ID。
- * @param {Object} folderMap buildFolderMap() 結果。
- * @return {string} 以 / 分隔的路徑。
+ * 取得檔案在 Google Drive 中的完整路徑。
+ * @param {File} file Drive 檔案物件。
+ * @return {string} 以 / 分隔的路徑，例如「My Drive/子資料夾/檔名」。
  */
-function resolveFolderPath(folderId, folderMap) {
-  var parts = [];
-  var visited = {};
-  var current = folderId;
-  while (current && folderMap[current] && !visited[current]) {
-    visited[current] = true;
-    parts.unshift(folderMap[current].name);
-    current = folderMap[current].parentId;
-  }
-  return parts.join('/');
+function getFilePathCached(file) {
+  var parents = file.getParents();
+  if (!parents.hasNext()) return file.getName();
+  return getFolderPathCached(parents.next()) + '/' + file.getName();
 }
 
 /**
@@ -125,17 +143,11 @@ function resolveFolderPath(folderId, folderMap) {
  */
 function handleListSpreadsheets(_params) {
   try {
-    var folderMap = buildFolderMap();
     var files = DriveApp.searchFiles('mimeType = "application/vnd.google-apps.spreadsheet"');
     var data = [];
     while (files.hasNext()) {
       var file = files.next();
-      var parents = file.getParents();
-      var parentId = parents.hasNext() ? parents.next().getId() : null;
-      var path = parentId
-        ? resolveFolderPath(parentId, folderMap) + '/' + file.getName()
-        : file.getName();
-      data.push({ id: file.getId(), name: file.getName(), path: path });
+      data.push({ id: file.getId(), name: file.getName(), path: getFilePathCached(file) });
     }
     return { ok: true, data: data };
   } catch (e) {
@@ -272,14 +284,11 @@ function handleGetQuestions(params) {
  */
 function handleListFolders(_params) {
   try {
-    var folderMap = buildFolderMap();
+    var folders = DriveApp.searchFiles('mimeType = "application/vnd.google-apps.folder"');
     var data = [];
-    for (var id in folderMap) {
-      data.push({
-        id: id,
-        name: folderMap[id].name,
-        path: resolveFolderPath(id, folderMap)
-      });
+    while (folders.hasNext()) {
+      var folder = folders.next();
+      data.push({ id: folder.getId(), name: folder.getName(), path: getFolderPathCached(folder) });
     }
     return { ok: true, data: data };
   } catch (e) {

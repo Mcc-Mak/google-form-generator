@@ -2,6 +2,11 @@
 
 本專案版本依 `major.minor.patch` 格式管理。
 
+## 0.5.7
+
+- **修正路徑計算錯誤**：`listSpreadsheets` / `listFolders` 的 `path` 欄位因 `buildFolderMap` 依賴 `searchFiles` 回傳所有資料夾，若部分資料夾未在結果中則路徑鏈斷裂，產生不完整或錯誤的路徑。改回以 `getParents()` 走訪實際 Drive 父層鏈（保證正確），同時加入 `_folderPathCache` 路徑快取，共用祖先的資料夾僅需 1 次 API 呼叫即可命中快取，兼顧正確性與效能。
+- 移除 `buildFolderMap` / `resolveFolderPath`，新增 `getFolderPathCached` / `getFilePathCached`。
+
 ## 0.5.6
 
 - **API 效能大幅優化**：
