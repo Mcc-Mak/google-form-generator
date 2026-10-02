@@ -665,6 +665,10 @@ body {
   background-color: var(--color-secondary);
 }
 
+.role-files h3::before {
+  background-color: #f29900;
+}
+
 .role-content {
   display: flex;
   flex-direction: column;

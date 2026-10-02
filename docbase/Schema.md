@@ -252,12 +252,21 @@ interface Header {
 
 ```typescript
 interface CreateFormResult {
-  formId: string;               // 建立的 Google 表單 ID
-  editUrl: string;              // 表單編輯連結（完整網址）
-  publishedUrl: string;         // 表單檢視連結（完整網址）
-  shortViewUrl: string;         // 表單檢視連結（短網址，is.gd）
-  spreadsheetUrl: string;       // 來源試算表連結（完整網址）
-  shortSpreadsheetUrl: string;  // 來源試算表連結（短網址，is.gd）
+  formId: string;                   // 建立的 Google 表單 ID
+  editUrl: string;                  // 表單編輯連結（完整網址）
+  publishedUrl: string;             // 表單檢視連結（完整網址）
+  shortViewUrl: string;             // 表單檢視連結（短網址，is.gd）
+  spreadsheetUrl: string;           // 來源試算表連結（完整網址）
+  shortSpreadsheetUrl: string;      // 來源試算表連結（短網址，is.gd）
+  deploymentId: string;             // 部署 ID（3 位數滾動計數器，001–999）
+  formFileName: string;             // Google 表單 Drive 檔案名稱（Google表格-部署${部署ID}）
+  responseSheetId: string;          // 回應試算表 ID
+  responseSheetUrl: string;         // 回應試算表連結（完整網址）
+  responseSheetName: string;        // 回應試算表 Drive 檔案名稱（Google試算表-部署${部署ID}）
+  shortResponseSheetUrl: string;    // 回應試算表連結（短網址，is.gd）
+  pdfFileName: string;              // PDF 檔案名稱（Google表格-PDF-${時間戳記}-部署${部署ID}.pdf）
+  pdfFileId: string;                // PDF 檔案 ID
+  pdfFileUrl: string;               // PDF 檔案連結
 }
 ```
 

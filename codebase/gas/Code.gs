@@ -343,8 +343,137 @@ function resolvePathFromMap(folderId, folderMap) {
   return parts.join('/');
 }
 
+// ==================== 部署 ID 與 PDF 產生 ====================
+
+/**
+ * 取得下一個部署 ID（3 位數滾動計數器，001–999，超過則回到 001）。
+ * 使用 PropertiesService 持久化儲存，跨請求保留計數。
+ * @return {string} 3 位數部署 ID，例如「001」。
+ */
+function getNextDeploymentId() {
+  var props = PropertiesService.getScriptProperties();
+  var current = parseInt(props.getProperty('deploymentId') || '0', 10);
+  current++;
+  if (current > 999) current = 1;
+  props.setProperty('deploymentId', String(current));
+  return ('00' + current).slice(-3);
+}
+
+/**
+ * 產生目前時間的時間戳記，格式為 yyyyMMddHHmmss。
+ * @return {string} 時間戳記字串，例如「20261002143025」。
+ */
+function formatTimestamp() {
+  return Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyyMMddHHmmss');
+}
+
+/**
+ * 將標籤與 URL 附加至 Google Document 段落。
+ * @param {DocumentApp.Body} body DocumentApp Body 物件。
+ * @param {string} label 標籤文字。
+ * @param {string} url URL 字串。
+ */
+function appendDocUrl(body, label, url) {
+  var labelPara = body.appendParagraph(label + '：');
+  labelPara.editAsText().setBold(true).setFontSize(9);
+  var urlPara = body.appendParagraph(url || '（無）');
+  urlPara.editAsText().setFontSize(9);
+}
+
+/**
+ * 在 Google Drive 指定資料夾中產生 PDF 檔案。
+ * 建立暫存 Google Document → 寫入內容 → 透過 Drive API v3 匯出為 PDF → 儲存至資料夾 → 刪除暫存文件。
+ * @param {Folder} folder 目標 Drive 資料夾。
+ * @param {string} fileName PDF 檔案名稱。
+ * @param {Object} params 內容參數。
+ * @return {Object} { fileName, fileId, fileUrl }
+ */
+function generatePdfToDrive(folder, fileName, params) {
+  var doc = DocumentApp.create('temp_' + fileName);
+  var body = doc.getBody();
+
+  var heading = body.appendParagraph('Google 表單建立結果');
+  heading.setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  heading.editAsText().setFontSize(16);
+
+  var titlePara = body.appendParagraph('表單標題：' + (params.title || '（未命名）'));
+  titlePara.editAsText().setBold(true);
+  body.appendParagraph('表單說明：' + (params.description || '（無）'));
+  body.appendParagraph('部署 ID：' + params.deploymentId);
+  body.appendParagraph('');
+
+  var userHeading = body.appendParagraph('一般使用者');
+  userHeading.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  userHeading.editAsText().setForegroundColor('#1a73e8');
+  appendDocUrl(body, '表單連結（完整網址）', params.publishedUrl);
+  appendDocUrl(body, '表單連結（短網址）', params.shortViewUrl);
+
+  if (params.shortViewUrl) {
+    try {
+      var qrResponse = UrlFetchApp.fetch(
+        'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(params.shortViewUrl)
+      );
+      var qrBlob = qrResponse.getBlob().setName('QR Code');
+      body.appendImage(qrBlob);
+    } catch (err) {
+      // QR Code 產生失敗則略過
+    }
+  }
+
+  body.appendParagraph('');
+
+  var maintainerHeading = body.appendParagraph('維護人員');
+  maintainerHeading.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  maintainerHeading.editAsText().setForegroundColor('#1e8e3e');
+  appendDocUrl(body, '表單編輯連結（完整網址）', params.editUrl);
+  appendDocUrl(body, '表單連結（完整網址）', params.publishedUrl);
+  appendDocUrl(body, '表單連結（短網址）', params.shortViewUrl);
+  appendDocUrl(body, '回應試算表連結', params.responseSheetUrl);
+
+  body.appendParagraph('');
+
+  var devHeading = body.appendParagraph('開發人員');
+  devHeading.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  devHeading.editAsText().setForegroundColor('#5f6368');
+  appendDocUrl(body, '表單連結（短網址）', params.shortViewUrl);
+  appendDocUrl(body, '回應試算表連結（短網址）', params.shortResponseSheetUrl);
+  appendDocUrl(body, '來源試算表連結（短網址）', params.shortSpreadsheetUrl);
+  appendDocUrl(body, '表單 ID', params.formId);
+
+  doc.saveAndClose();
+
+  var token = ScriptApp.getOAuthToken();
+  var exportUrl = 'https://www.googleapis.com/drive/v3/files/' + doc.getId() +
+    '/export?mimeType=' + encodeURIComponent('application/pdf');
+  var exportResponse = UrlFetchApp.fetch(exportUrl, {
+    headers: { Authorization: 'Bearer ' + token },
+    muteHttpExceptions: true
+  });
+
+  var pdfBlob = exportResponse.getBlob().setName(fileName);
+  var pdfFile = folder.createFile(pdfBlob);
+
+  DriveApp.getFileById(doc.getId()).setTrashed(true);
+
+  return {
+    fileName: pdfFile.getName(),
+    fileId: pdfFile.getId(),
+    fileUrl: pdfFile.getUrl()
+  };
+}
+
 /**
  * 根據設定建立 Google 表單，並移動至指定資料夾。
+ *
+ * 處理流程：
+ *   1. 取得部署 ID（3 位數滾動計數器）。
+ *   2. 以使用者輸入的 title 建立表單（顯示標題）。
+ *   3. 新增問題項目。
+ *   4. 移動表單至指定資料夾，並將檔案重命名為「Google表格-部署${id}」。
+ *   5. 建立回應試算表「Google試算表-部署${id}」，移動至同一資料夾。
+ *   6. 設定表單回應目的地為新試算表。
+ *   7. 縮短各項 URL。
+ *   8. 產生 PDF 並儲存至指定資料夾。
  *
  * 每個欄位的 type 可為：
  *   - 簡答 / short             → TextItem
@@ -357,7 +486,7 @@ function resolvePathFromMap(folderId, folderMap) {
  *   - 時間 / time              → TimeItem
  *
  * @param {Object} params 需包含 title, description, folderId, fields（陣列）。
- * @return {Object} { ok: true, data: { formId, editUrl, publishedUrl } }
+ * @return {Object} { ok: true, data: { formId, editUrl, publishedUrl, ... } }
  */
 function handleCreateForm(params) {
   try {
@@ -366,6 +495,8 @@ function handleCreateForm(params) {
     var folderId = params.folderId;
     var fields = params.fields;
     var spreadsheetId = params.spreadsheetId;
+
+    var deploymentId = getNextDeploymentId();
 
     var form = FormApp.create(title);
     form.setDescription(description);
@@ -426,17 +557,30 @@ function handleCreateForm(params) {
       item.setRequired(field.required);
     }
 
-    // 將表單移動至指定資料夾
+    var folder = DriveApp.getFolderById(folderId);
+
     var formFile = DriveApp.getFileById(form.getId());
-    formFile.moveTo(DriveApp.getFolderById(folderId));
+    formFile.moveTo(folder);
+    var formFileName = 'Google表格-部署' + deploymentId;
+    formFile.setName(formFileName);
+
+    var responseSheetName = 'Google試算表-部署' + deploymentId;
+    var responseSheet = SpreadsheetApp.create(responseSheetName);
+    var responseSheetId = responseSheet.getId();
+    var responseSheetFile = DriveApp.getFileById(responseSheetId);
+    responseSheetFile.moveTo(folder);
+
+    form.setDestination(FormApp.DestinationType.SPREADSHEET, responseSheetId);
 
     var editUrl = form.getEditUrl();
     var publishedUrl = form.getPublishedUrl();
+    var responseSheetUrl = 'https://docs.google.com/spreadsheets/d/' + responseSheetId + '/edit';
     var spreadsheetUrl = spreadsheetId
       ? 'https://docs.google.com/spreadsheets/d/' + spreadsheetId + '/edit'
       : '';
 
     var shortViewUrl = publishedUrl;
+    var shortResponseSheetUrl = responseSheetUrl;
     var shortSpreadsheetUrl = spreadsheetUrl;
 
     var fetchRequests = [];
@@ -447,6 +591,13 @@ function handleCreateForm(params) {
         muteHttpExceptions: true
       });
       fetchKeys.push('view');
+    }
+    if (responseSheetUrl) {
+      fetchRequests.push({
+        url: 'https://is.gd/create.php?format=json&url=' + encodeURIComponent(responseSheetUrl),
+        muteHttpExceptions: true
+      });
+      fetchKeys.push('responseSheet');
     }
     if (spreadsheetUrl) {
       fetchRequests.push({
@@ -463,6 +614,8 @@ function handleCreateForm(params) {
           var json = JSON.parse(responses[j].getContentText());
           if (fetchKeys[j] === 'view') {
             shortViewUrl = json.shorturl || publishedUrl;
+          } else if (fetchKeys[j] === 'responseSheet') {
+            shortResponseSheetUrl = json.shorturl || responseSheetUrl;
           } else {
             shortSpreadsheetUrl = json.shorturl || spreadsheetUrl;
           }
@@ -472,6 +625,22 @@ function handleCreateForm(params) {
       }
     }
 
+    var timestamp = formatTimestamp();
+    var pdfFileName = 'Google表格-PDF-' + timestamp + '-部署' + deploymentId + '.pdf';
+    var pdfResult = generatePdfToDrive(folder, pdfFileName, {
+      title: title,
+      description: description,
+      publishedUrl: publishedUrl,
+      shortViewUrl: shortViewUrl,
+      editUrl: editUrl,
+      responseSheetUrl: responseSheetUrl,
+      shortResponseSheetUrl: shortResponseSheetUrl,
+      spreadsheetUrl: spreadsheetUrl,
+      shortSpreadsheetUrl: shortSpreadsheetUrl,
+      formId: form.getId(),
+      deploymentId: deploymentId
+    });
+
     return {
       ok: true,
       data: {
@@ -480,7 +649,16 @@ function handleCreateForm(params) {
         publishedUrl: publishedUrl,
         shortViewUrl: shortViewUrl,
         spreadsheetUrl: spreadsheetUrl,
-        shortSpreadsheetUrl: shortSpreadsheetUrl
+        shortSpreadsheetUrl: shortSpreadsheetUrl,
+        deploymentId: deploymentId,
+        formFileName: formFileName,
+        responseSheetId: responseSheetId,
+        responseSheetUrl: responseSheetUrl,
+        responseSheetName: responseSheetName,
+        shortResponseSheetUrl: shortResponseSheetUrl,
+        pdfFileName: pdfResult.fileName,
+        pdfFileId: pdfResult.fileId,
+        pdfFileUrl: pdfResult.fileUrl
       }
     };
   } catch (e) {

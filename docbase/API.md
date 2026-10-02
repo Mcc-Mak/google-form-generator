@@ -221,13 +221,18 @@
 根據使用者設定的欄位建立 Google 表單，並將表單移動至指定的 Google Drive 資料夾。
 
 處理流程：
-1. 透過 `FormApp.create(title)` 建立表單。
-2. 透過 `form.setDescription(description)` 設定表單說明。
-3. 依每個欄位的 `type` 新增對應的問題項目（`addTextItem`、`addParagraphTextItem` 等）。
-4. 設定問題標題 (`item.setTitle`) 與必填 (`item.setRequired`)。
-5. 選擇類型需設定選項 (`item.setChoiceValues`)。
-6. 透過 `DriveApp.getFileById(form.getId()).moveTo(DriveApp.getFolderById(folderId))` 移動表單至指定資料夾。
-7. 回傳 `formId`、`editUrl` 與 `publishedUrl`。
+1. 取得部署 ID（3 位數滾動計數器，001–999，透過 `PropertiesService` 持久化）。
+2. 透過 `FormApp.create(title)` 建立表單（顯示標題為使用者輸入的 title）。
+3. 透過 `form.setDescription(description)` 設定表單說明。
+4. 依每個欄位的 `type` 新增對應的問題項目（`addTextItem`、`addParagraphTextItem` 等）。
+5. 設定問題標題 (`item.setTitle`) 與必填 (`item.setRequired`)。
+6. 選擇類型需設定選項 (`item.setChoiceValues`)。
+7. 透過 `DriveApp.getFileById(form.getId()).moveTo(folder)` 移動表單至指定資料夾，並重命名為 `Google表格-部署${部署ID}`。
+8. 透過 `SpreadsheetApp.create()` 建立回應試算表 `Google試算表-部署${部署ID}`，移動至指定資料夾。
+9. 透過 `form.setDestination(FormApp.DestinationType.SPREADSHEET, responseSheetId)` 連結表單回應至新試算表。
+10. 透過 is.gd 縮短表單連結、回應試算表連結、來源試算表連結。
+11. 透過 `DocumentApp` 建立暫存文件，寫入建立結果（含 QR Code），經 Drive API v3 匯出為 PDF，儲存為 `Google表格-PDF-${時間戳記}-部署${部署ID}.pdf` 至指定資料夾，刪除暫存文件。
+12. 回傳表單資訊、回應試算表資訊、PDF 檔案資訊等完整資料。
 
 ### 請求 JSON 範例
 
@@ -297,7 +302,16 @@
     "publishedUrl": "https://docs.google.com/forms/d/e/1FAIpQLSf.../viewform",
     "shortViewUrl": "https://is.gd/abc1234",
     "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1AbCdEfGhIjKlMnOpQrStUvWxYz1234567890/edit",
-    "shortSpreadsheetUrl": "https://is.gd/def5678"
+    "shortSpreadsheetUrl": "https://is.gd/def5678",
+    "deploymentId": "001",
+    "formFileName": "Google表格-部署001",
+    "responseSheetId": "2BcDeFgHiJkLmNoPqRsTuVwXyZ0987654321a",
+    "responseSheetUrl": "https://docs.google.com/spreadsheets/d/2BcDeFgHiJkLmNoPqRsTuVwXyZ0987654321a/edit",
+    "responseSheetName": "Google試算表-部署001",
+    "shortResponseSheetUrl": "https://is.gd/ghi9012",
+    "pdfFileName": "Google表格-PDF-20261002143025-部署001.pdf",
+    "pdfFileId": "3CdEfGhIjKlMnOpQrStUvWxYz5678901234b",
+    "pdfFileUrl": "https://drive.google.com/file/d/3CdEfGhIjKlMnOpQrStUvWxYz5678901234b/view"
   }
 }
 ```
@@ -312,6 +326,15 @@
 | `shortViewUrl` | 表單檢視連結（短網址，透過 is.gd 縮短） |
 | `spreadsheetUrl` | 來源試算表連結（完整網址） |
 | `shortSpreadsheetUrl` | 來源試算表連結（短網址，透過 is.gd 縮短） |
+| `deploymentId` | 部署 ID（3 位數滾動計數器，001–999） |
+| `formFileName` | Google 表單在 Drive 中的檔案名稱（`Google表格-部署${部署ID}`） |
+| `responseSheetId` | 回應試算表 ID |
+| `responseSheetUrl` | 回應試算表連結（完整網址） |
+| `responseSheetName` | 回應試算表在 Drive 中的檔案名稱（`Google試算表-部署${部署ID}`） |
+| `shortResponseSheetUrl` | 回應試算表連結（短網址，透過 is.gd 縮短） |
+| `pdfFileName` | PDF 檔案名稱（`Google表格-PDF-${時間戳記}-部署${部署ID}.pdf`） |
+| `pdfFileId` | PDF 檔案 ID |
+| `pdfFileUrl` | PDF 檔案連結 |
 
 ### 錯誤回應範例
 

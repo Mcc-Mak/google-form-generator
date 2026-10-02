@@ -3,6 +3,12 @@ import { createForm } from '../api'
 import { QRCodeCanvas } from 'qrcode.react'
 import Swal from 'sweetalert2'
 
+const formatTimestamp = () => {
+  const d = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
+}
+
 export default function StepResult({ payload, onBack, onRestart }) {
   const [status, setStatus] = useState('idle')
   const [result, setResult] = useState(null)
@@ -65,7 +71,7 @@ export default function StepResult({ payload, onBack, onRestart }) {
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<title>Google \u8868\u55ae\u5efa\u7acb\u7d50\u679c</title>
+<title>Google表格-PDF-${formatTimestamp()}-部署${result.deploymentId}</title>
 <style>
   @page { size: A4; margin: 15mm; }
   * { box-sizing: border-box; }
@@ -110,6 +116,7 @@ export default function StepResult({ payload, onBack, onRestart }) {
 <h1>Google \u8868\u55ae\u5efa\u7acb\u7d50\u679c</h1>
 <p class="form-title"><strong>\u8868\u55ae\u6a19\u984c\uff1a</strong>${esc(payload.title || '\uff08\u672a\u547d\u540d\uff09')}</p>
 <p class="form-title"><strong>\u8868\u55ae\u8aaa\u660e\uff1a</strong>${esc(payload.description || '\uff08\u7121\uff09')}</p>
+<p class="form-title"><strong>部署 ID：</strong>${esc(result.deploymentId || '')}</p>
 
 <div class="role-section role-user">
   <h2>\u4e00\u822c\u4f7f\u7528\u8005</h2>
@@ -123,13 +130,17 @@ export default function StepResult({ payload, onBack, onRestart }) {
   ${urlItem('\u8868\u55ae\u7de8\u8f2f\u9023\u7d50\uff08\u5b8c\u6574\u7db2\u5740\uff09', result.editUrl, true)}
   ${urlItem('\u8868\u55ae\u9023\u7d50\uff08\u5b8c\u6574\u7db2\u5740\uff09', result.publishedUrl, true)}
   ${urlItem('\u8868\u55ae\u9023\u7d50\uff08\u77ed\u7db2\u5740\uff09', result.shortViewUrl, true)}
+  ${urlItem('回應試算表連結', result.responseSheetUrl, true)}
 </div>
 
 <div class="role-section role-developer">
   <h2>\u958b\u767c\u4eba\u54e1</h2>
   ${urlItem('\u8868\u55ae\u9023\u7d50\uff08\u77ed\u7db2\u5740\uff09', result.shortViewUrl, true)}
+  ${urlItem('回應試算表連結（短網址）', result.shortResponseSheetUrl, true)}
   ${urlItem('\u8a66\u7b97\u8868\u9023\u7d50\uff08\u77ed\u7db2\u5740\uff09', result.shortSpreadsheetUrl, true)}
   ${urlItem('\u8868\u55ae ID', result.formId, false)}
+  ${urlItem('部署 ID', result.deploymentId, false)}
+  ${urlItem('PDF 檔案', result.pdfFileUrl, true)}
 </div>
 </body>
 </html>`
@@ -201,6 +212,42 @@ export default function StepResult({ payload, onBack, onRestart }) {
             <strong>表單標題：</strong>{payload.title || '（未命名）'}
           </div>
 
+          <div className="role-card role-files">
+            <h3>建立檔案</h3>
+            <div className="role-content">
+              <UrlRow
+                label="部署 ID"
+                value={result.deploymentId || ''}
+                onCopy={copyToClipboard}
+              />
+              <UrlRow
+                label="Google 表單檔案名稱"
+                value={result.formFileName || ''}
+                onCopy={copyToClipboard}
+              />
+              <UrlRow
+                label="回應試算表連結"
+                value={result.responseSheetUrl || ''}
+                onCopy={copyToClipboard}
+              />
+              <UrlRow
+                label="回應試算表名稱"
+                value={result.responseSheetName || ''}
+                onCopy={copyToClipboard}
+              />
+              <UrlRow
+                label="PDF 檔案名稱"
+                value={result.pdfFileName || ''}
+                onCopy={copyToClipboard}
+              />
+              <UrlRow
+                label="PDF 檔案連結"
+                value={result.pdfFileUrl || ''}
+                onCopy={copyToClipboard}
+              />
+            </div>
+          </div>
+
           {/* ── 一般使用者 ── */}
           <div className="role-card role-user">
             <h3>一般使用者</h3>
@@ -262,6 +309,11 @@ export default function StepResult({ payload, onBack, onRestart }) {
                 onCopy={copyToClipboard}
               />
               <UrlRow
+                label="回應試算表連結（短網址）"
+                value={result.shortResponseSheetUrl || ''}
+                onCopy={copyToClipboard}
+              />
+              <UrlRow
                 label="試算表連結（短網址）"
                 value={result.shortSpreadsheetUrl || ''}
                 onCopy={copyToClipboard}
@@ -269,6 +321,16 @@ export default function StepResult({ payload, onBack, onRestart }) {
               <UrlRow
                 label="表單 ID"
                 value={result.formId || ''}
+                onCopy={copyToClipboard}
+              />
+              <UrlRow
+                label="部署 ID"
+                value={result.deploymentId || ''}
+                onCopy={copyToClipboard}
+              />
+              <UrlRow
+                label="PDF 檔案連結"
+                value={result.pdfFileUrl || ''}
                 onCopy={copyToClipboard}
               />
             </div>
