@@ -1,0 +1,85 @@
+name: 前端建置與部署
+
+on:
+  push:
+    branches: [dev-001]
+    paths:
+      - 'codebase/gh/**'
+      - '.github/workflows/gh.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: gh-deploy
+  cancel-in-progress: false
+
+jobs:
+  # ── 建置 ──
+  build:
+    name: 建置前端
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: codebase/gh
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: codebase/gh/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: codebase/gh/dist
+
+  # ── 推進 dev-001 → dev ──
+  promote-dev:
+    name: 推進至 dev
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 快轉 dev 至 dev-001
+        run: |
+          git checkout dev || git checkout -b dev dev-001
+          git merge --ff-only dev-001
+          git push origin dev
+
+  # ── 推進 dev → main 並部署 Pages ──
+  promote-main:
+    name: 推進至 main 並部署
+    needs: promote-dev
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 快轉 main 至 dev
+        run: |
+          git checkout main || git checkout -b main dev
+          git merge --ff-only dev
+          git push origin main
+
+      - uses: actions/configure-pages@v5
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

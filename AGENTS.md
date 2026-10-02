@@ -9,15 +9,21 @@ Project: webapp to build a Google Form from a Google Sheet and save it to a spec
 
 ## Stack
 
-- Frontend: GitHub Pages (static site, served from repo). Code lives in `codebase/gh/`.
+- Frontend: React + Vite (static SPA), built and deployed to GitHub Pages. Code lives in `codebase/gh/`.
+  - Build: `npm run build` (outputs to `codebase/gh/dist/`).
+  - Lint: `npm run lint` (ESLint flat config).
+  - Dev server: `npm run dev`.
+  - `vite.config.js` sets `base: '/google-form-generator/'` for the Pages subpath.
 - Backend: Google Apps Script (GAS). Code lives in `codebase/gas/`.
 - Database: Google Sheets.
+- CI: `.github/workflows/gh.yml` (build → promote dev-001→dev→main → deploy Pages), `.github/workflows/gas.yml` (promote + `clasp push`).
 
 ## Layout
 
-- `codebase/gh/` — GitHub Pages frontend
+- `codebase/gh/` — React + Vite frontend (source in `src/`, built output in `dist/`)
 - `codebase/gas/` — GAS backend
 - `docbase/` — all project docs
+- `.github/workflows/` — CI pipelines (`gh.yml`, `gas.yml`)
 - `CHANGELOG.md` (repo root) — versioned `major.minor.patch`
 
 ## Docs (`docbase/`)

@@ -2,7 +2,7 @@
 
 ## 1. 系統概述
 
-本系統採用「靜態前端 + GAS Web App 後端」的分離架構。前端部署於 GitHub Pages，為純靜態 HTML/CSS/Vanilla JS 檔案；後端為 Google Apps Script Web App，負責所有 Google API 操作。兩者透過 HTTP POST 以 JSON 格式通訊。
+本系統採用「靜態前端 + GAS Web App 後端」的分離架構。前端以 React + Vite 建置為靜態 SPA，部署於 GitHub Pages；後端為 Google Apps Script Web App，負責所有 Google API 操作。兩者透過 HTTP POST 以 JSON 格式通訊。
 
 ## 2. 為何前端委託 GAS 處理所有 Google API 呼叫
 
@@ -22,8 +22,8 @@
 | 面向 | 前端 (GitHub Pages) | 後端 (GAS) |
 |---|---|---|
 | 職責 | 使用者介面、輸入驗證、狀態管理 | Google API 操作、業務邏輯、錯誤處理 |
-| 技術 | HTML/CSS/Vanilla JS | Google Apps Script (V8) |
-| 部署 | `git push` → GitHub Pages | `clasp push` → GAS |
+| 技術 | React + Vite (靜態 SPA) | Google Apps Script (V8) |
+| 部署 | `git push` → CI 建置 → GitHub Pages | `clasp push` → GAS |
 | 更新頻率 | 高（UI 變更） | 低（API 變更） |
 | 憑證 | 無 | OAuth 範圍定義於 `appsscript.json` |
 
@@ -33,7 +33,7 @@
 
 ```mermaid
 flowchart LR
-    User([使用者]) --> Frontend["GitHub Pages\n(靜態前端)"]
+    User([使用者]) -->     Frontend["GitHub Pages\n(React SPA)"]
     Frontend -->|"fetch POST\n{action, ...params}"| GAS["GAS Web App\n(後端)"]
     GAS -->|"SpreadsheetApp"| Sheets[(Google Sheets)]
     GAS -->|"FormApp"| Forms[(Google Forms)]
@@ -95,18 +95,23 @@ flowchart TD
 
 ## 4. 前端架構
 
-前端採用 IIFE 封裝，避免全域變數污染。主要模組如下：
+前端採用 React + Vite，以元件化的方式組織。主要模組如下：
 
-| 模組 | 職責 |
-|---|---|
-| 常數定義 | `STORAGE_KEY`、`QUESTION_TYPES`（8 種問題類型）、`CHOICE_TYPES`（需選項的類型）、`TOTAL_STEPS` |
-| 狀態管理 | `state` 物件，包含 `currentStep`、`gasUrl`、`spreadsheetId`、`sheetName`、`headers`、`fields`、`folders`、`folderId`、`formTitle`、`formDescription` |
-| 步驟導覽 | `goToStep()`、`onStepEnter()` — 控制步驟切換與進入時的資料載入 |
-| GAS 通訊 | `getGasUrl()`、`callGas(payload)` — 封裝 fetch POST 與錯誤處理 |
-| 資料載入 | `loadSpreadsheets()`、`loadSheets()`、`loadHeaders()`、`loadFolders()`、`createForm()` |
-| UI 渲染 | `renderFields()`、`createFieldCard()`、`toggleOptionsEditor()` |
-| 驗證 | `validateStep0()` 至 `validateStep4()` — 各步驟的前端驗證 |
-| 事件綁定 | `initEvents()` — 綁定所有按鈕與步驟指示器的事件 |
+| 模組 | 檔案 | 職責 |
+|---|---|---|
+| 常數定義 | `src/constants.js` | `STORAGE_KEY`、`QUESTION_TYPES`（8 種問題類型）、`CHOICE_TYPES`（需選項的類型）、`STEP_LABELS` |
+| GAS 通訊 | `src/api.js` | `getGasUrl()`、`setGasUrl()`、`callGas(payload)` — 封裝 fetch POST 與錯誤處理；匯出 `listSpreadsheets`、`listSheets`、`getHeaders`、`listFolders`、`createForm` |
+| 應用根元件 | `src/App.jsx` | 精靈狀態管理（`useState`）、步驟導覽（`goNext`/`goBack`/`goTo`）、欄位更新、建立表單 payload 組裝 |
+| 步驟指示器 | `src/components/StepIndicators.jsx` | 6 步驟進度指示，可點擊已完成步驟返回 |
+| 步驟一 | `src/components/StepUrl.jsx` | 輸入並驗證 GAS Web App URL，儲存至 `localStorage` |
+| 步驟二 | `src/components/StepSpreadsheets.jsx` | 呼叫 `listSpreadsheets`，下拉選擇試算表 |
+| 步驟三 | `src/components/StepSheets.jsx` | 呼叫 `listSheets`，下拉選擇工作表分頁 |
+| 步驟四 | `src/components/StepFields.jsx` | 呼叫 `getHeaders`，渲染欄位卡片（類型、標題、必填、選項編輯器） |
+| 步驟五 | `src/components/StepFolder.jsx` | 呼叫 `listFolders`，選擇資料夾、輸入表單標題與說明 |
+| 步驟六 | `src/components/StepResult.jsx` | 顯示摘要、呼叫 `createForm`、顯示結果連結與複製按鈕 |
+| 樣式 | `src/styles.css` | Google 風格主題，CSS 變數、響應式設計、無障礙支援 |
+
+前端狀態由 `App.jsx` 集中管理，透過 props 傳遞至各步驟元件。每個步驟元件內部使用 `useState` 管理局部 UI 狀態（如載入中、錯誤訊息），並以 `useEffect` 在掛載時載入後端資料。
 
 ## 5. 後端架構
 

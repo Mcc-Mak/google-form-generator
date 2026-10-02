@@ -1,0 +1,91 @@
+name: GAS 後端部署
+
+on:
+  push:
+    branches: [dev-001]
+    paths:
+      - 'codebase/gas/**'
+      - '.github/workflows/gas.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: gas-deploy
+  cancel-in-progress: false
+
+jobs:
+  # ── 推進 dev-001 → dev → main ──
+  promote:
+    name: 推進分支
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 快轉 dev 至 dev-001
+        run: |
+          git checkout dev || git checkout -b dev dev-001
+          git merge --ff-only dev-001
+          git push origin dev
+
+      - name: 快轉 main 至 dev
+        run: |
+          git checkout main || git checkout -b main dev
+          git merge --ff-only dev
+          git push origin main
+
+  # ── clasp push ──
+  deploy:
+    name: clasp 推送
+    needs: promote
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 安裝 clasp
+        run: npm install -g @google/clasp
+
+      - name: 寫入 .clasp.json
+        env:
+          GAS_SCRIPT_ID: ${{ secrets.GAS_SCRIPT_ID }}
+        run: |
+          cat > .clasp.json <<EOF
+          {
+            "scriptId": "${GAS_SCRIPT_ID}",
+            "rootDir": "codebase/gas"
+          }
+          EOF
+
+      - name: clasp 登入與推送
+        env:
+          CLASPRC_ACCESS_TOKEN: ${{ secrets.CLASPRC_ACCESS_TOKEN }}
+          CLASPRC_ID_TOKEN: ${{ secrets.CLASPRC_ID_TOKEN }}
+          CLASPRC_REFRESH_TOKEN: ${{ secrets.CLASPRC_REFRESH_TOKEN }}
+          CLASPRC_CLIENT_ID: ${{ secrets.CLASPRC_CLIENT_ID }}
+          CLASPRC_CLIENT_SECRET: ${{ secrets.CLASPRC_CLIENT_SECRET }}
+        run: |
+          mkdir -p ~/.clasprc
+          cat > ~/.clasprc.json <<EOF
+          {
+            "token": {
+              "access_token": "${CLASPRC_ACCESS_TOKEN}",
+              "id_token": "${CLASPRC_ID_TOKEN}",
+              "refresh_token": "${CLASPRC_REFRESH_TOKEN}",
+              "scope": "https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/service.management https://www.googleapis.com/auth/logging.read https://www.googleapis.com/auth/cloud-platform",
+              "expires_in": 3600,
+              "expiry_date": 0
+            },
+            "oauth2ClientSettings": {
+              "clientId": "${CLASPRC_CLIENT_ID}",
+              "clientSecret": "${CLASPRC_CLIENT_SECRET}",
+              "redirectUri": "http://localhost"
+            },
+            "isLocalCreds": false
+          }
+          EOF
+          clasp push -f

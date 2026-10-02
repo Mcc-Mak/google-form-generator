@@ -108,21 +108,21 @@
 | 編號 | 類別 | 需求 |
 |---|---|---|
 | NFR-01 | 語言 | 所有介面文字與文件皆使用繁體中文 (zh-Hant)。 |
-| NFR-02 | 技術限制 | 前端使用純 Vanilla JS，不使用任何框架、CDN 或外部資源。 |
+| NFR-02 | 技術限制 | 前端使用 React + Vite 建置為靜態 SPA，不使用任何後端框架。 |
 | NFR-03 | 安全性 | 前端不包含任何 API 金鑰或 OAuth 憑證；所有 Google API 呼叫皆經由 GAS 後端。 |
 | NFR-04 | 回應式設計 | 介面支援手機（>= 375px）與桌面瀏覽器。 |
 | NFR-05 | 無障礙 | 支援鍵盤導覽（`focus-visible`）與 `prefers-reduced-motion`。 |
 | NFR-06 | 錯誤處理 | 所有錯誤以繁體中文顯示；區分網路錯誤（`TypeError`）與業務錯誤。 |
 | NFR-07 | 資料暫存 | GAS URL 暫存於 `localStorage`，鍵名為 `gasWebAppUrl`。 |
 | NFR-08 | API 一致性 | GAS 回應格式統一為 `{ ok: boolean, data?: any, error?: string }`。 |
-| NFR-09 | 部署 | 前端部署至 GitHub Pages；後端透過 clasp 部署至 Google Apps Script。 |
+| NFR-09 | 部署 | 前端由 CI（`.github/workflows/gh.yml`）建置並部署至 GitHub Pages；後端透過 CI（`.github/workflows/gas.yml`）或 clasp 部署至 Google Apps Script。 |
 
 ## 4. 限制條件
 
 | 編號 | 限制 | 說明 |
 |---|---|---|
-| C-01 | Vanilla JS | 前端不得使用任何 JavaScript 框架或建置工具。 |
-| C-02 | 無 CDN | 前端不得引用任何 CDN 資源（CSS、JS、字型等）。 |
+| C-01 | React + Vite | 前端使用 React + Vite 建置，輸出為靜態 SPA 部署至 GitHub Pages。 |
+| C-02 | 無 CDN | 前端建置後為自包含靜態檔案，不引用任何外部 CDN 資源。 |
 | C-03 | 繁體中文 | 所有介面文字、錯誤訊息、文件內容均須使用繁體中文。 |
 | C-04 | GAS 存取設定 | GAS Web App 須設定為 `ANYONE_ANONYMOUS` 存取，以 `USER_DEPLOYING` 身份執行。 |
 | C-05 | OAuth 範圍 | GAS 須授予 `spreadsheets`、`forms`、`drive`、`script.external_request` 權限。 |
@@ -134,9 +134,10 @@
 
 | 項目 | 內容 |
 |---|---|
-| 技術 | 靜態 HTML + CSS + Vanilla JS |
-| 檔案 | `index.html`、`app.js`、`style.css` |
-| 部署位置 | GitHub Pages（`gh-pages` 分支或 `/docs` 目錄） |
+| 技術 | React + Vite（靜態 SPA） |
+| 原始碼 | `src/` 目錄（`main.jsx`、`App.jsx`、`api.js`、`constants.js`、`styles.css`、`components/`） |
+| 建置輸出 | `dist/` 目錄（`index.html` + `assets/`） |
+| 部署位置 | GitHub Pages（CI 自動部署） |
 | 通訊方式 | 透過 `fetch()` POST 至 GAS Web App URL |
 
 ### 5.2 Google Apps Script（後端）

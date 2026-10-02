@@ -2,6 +2,14 @@
 
 本專案版本依 `major.minor.patch` 格式管理。
 
+## 0.3.0
+
+- 前端從 Vanilla JS 遷移至 React + Vite：6 步驟精靈以元件化方式重構（`App.jsx` + 6 個步驟元件 + `api.js` + `constants.js`），保留原有 UI 風格與全部功能。
+- 新增 CI pipeline：`.github/workflows/gh.yml`（建置 → 推進 dev-001→dev→main → 部署 GitHub Pages）、`.github/workflows/gas.yml`（推進分支 + `clasp push`）。
+- 新增前端建置工具鏈：`package.json`、`vite.config.js`（`base: '/google-form-generator/'`）、`eslint.config.js`（flat config）、`.gitignore`。
+- 更新 `AGENTS.md`：Stack 與 Layout 段落反映 React + Vite 及 CI pipeline。
+- 更新文件：`QuickStart.md`（npm dev/build、CI 部署）、`Architecture.md`（React 元件架構）、`SRS.md`（技術限制與外部介面）。
+
 ## 0.2.0
 
 - 新增前端精靈 UI（`codebase/gh/`）：6 步驟表單建立精靈，包含 GAS URL 輸入、試算表選擇、工作表選擇、欄位設定（8 種問題類型）、資料夾與表單資訊、結果顯示，純 Vanilla JS 實作，無外部相依。

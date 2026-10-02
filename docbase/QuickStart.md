@@ -4,31 +4,33 @@
 
 ## 1. 本機前端預覽
 
-### 1.1 直接開啟
-
-最簡單的方式是直接用瀏覽器開啟 `index.html`：
+### 1.1 安裝相依套件
 
 ```bash
-# 直接以瀏覽器開啟
-open codebase/gh/index.html        # macOS
-xdg-open codebase/gh/index.html     # Linux
-start codebase/gh/index.html        # Windows
-```
-
-### 1.2 使用 HTTP 伺服器
-
-若需模擬正式環境（例如測試 `fetch` 行為），建議使用簡易 HTTP 伺服器：
-
-```bash
-# 使用 Python 內建 HTTP 伺服器
 cd codebase/gh
-python3 -m http.server 8080
-
-# 或使用 Node.js 的 http-server
-npx http-server codebase/gh -p 8080
+npm install
 ```
 
-開啟瀏覽器前往 `http://localhost:8080` 即可看到精靈介面。
+### 1.2 啟動開發伺服器
+
+```bash
+npm run dev
+```
+
+Vite 會啟動本機開發伺服器，預設網址為 `http://localhost:5173`，開啟瀏覽器前往該網址即可看到精靈介面。
+
+### 1.3 建置正式版本
+
+```bash
+npm run build    # 輸出至 codebase/gh/dist/
+npm run preview  # 本機預覽建置結果
+```
+
+### 1.4 程式碼檢查
+
+```bash
+npm run lint     # ESLint 檢查
+```
 
 > **注意**：本機預覽時，步驟一需輸入已部署的 GAS Web App URL 才能與後端通訊。
 
@@ -122,67 +124,34 @@ clasp push
 
 > **重要**：更新部署後，Web App URL 不會改變。
 
-## 4. 設定 GitHub Pages
+## 4. GitHub Pages 部署
 
-### 4.1 推送前端至 GitHub
+### 4.1 CI 自動部署
 
-#### 方法 A：使用 `gh-pages` 分支
+前端部署已整合至 CI pipeline（`.github/workflows/gh.yml`）。當推送到 `dev-001` 分支時，CI 會自動執行以下步驟：
 
-```bash
-# 建立 gh-pages 分支
-git checkout -b gh-pages
-
-# 將前端檔案複製到分支根目錄
-cp codebase/gh/index.html .
-cp codebase/gh/app.js .
-cp codebase/gh/style.css .
-
-# 提交並推送
-git add .
-git commit -m "Deploy frontend to GitHub Pages"
-git push origin gh-pages
-```
-
-#### 方法 B：使用 `/docs` 目錄
-
-```bash
-# 將前端檔案複製到 /docs 目錄
-mkdir -p docs
-cp codebase/gh/index.html docs/
-cp codebase/gh/app.js docs/
-cp codebase/gh/style.css docs/
-
-# 提交並推送
-git add docs
-git commit -m "Add GitHub Pages content to /docs"
-git push origin main
-```
+1. `npm ci` 安裝相依套件
+2. `npm run lint` 程式碼檢查
+3. `npm run build` 建置正式版本
+4. 推進分支：`dev-001 → dev → main`
+5. 部署 `dist/` 至 GitHub Pages
 
 ### 4.2 設定 GitHub Pages 來源
 
 1. 前往 GitHub 儲存庫的「Settings」頁面。
 2. 左側選單找到「Pages」。
-3. 在「Source」區塊：
-   - 方法 A：選擇 `gh-pages` 分支、`/(root)` 目錄。
-   - 方法 B：選擇 `main` 分支、`/docs` 目錄。
-4. 點擊「Save」。
+3. 在「Source」區塊選擇 **GitHub Actions**。
+4. 儲存設定。
 
 ### 4.3 取得 GitHub Pages URL
 
-設定完成後，GitHub 會顯示 Pages URL，格式如下：
+CI 部署完成後，GitHub 會顯示 Pages URL，格式如下：
 
 ```
 https://your-username.github.io/your-repo/
 ```
 
-### 4.4 在精靈中更新 GAS URL
-
-1. 開啟 GitHub Pages 網站。
-2. 在步驟一輸入您的 GAS Web App URL。
-3. 點擊「儲存網址」將 URL 暫存至瀏覽器。
-4. 依精靈步驟完成表單建立。
-
-> **提示**：GAS URL 會儲存在瀏覽器的 `localStorage` 中（鍵名 `gasWebAppUrl`），下次開啟時會自動填入。
+> **注意**：`vite.config.js` 中已設定 `base: '/google-form-generator/'`，以對應 GitHub Pages 子路徑。若您的儲存庫名稱不同，請同步修改此設定。
 
 ## 5. 完整部署檢查清單
 
@@ -193,7 +162,7 @@ https://your-username.github.io/your-repo/
 | 執行 `clasp push` 推送後端程式碼 | ☐ |
 | 在 GAS 部署為 Web App（存取設為「任何人」） | ☐ |
 | 取得 GAS Web App URL | ☐ |
-| 推送前端至 `gh-pages` 分支或 `/docs` 目錄 | ☐ |
-| 在 GitHub Settings → Pages 設定來源 | ☐ |
+| GitHub Settings → Pages 設定來源為 GitHub Actions | ☐ |
+| 推送 `dev-001` 觸發 CI 建置與部署 | ☐ |
 | 開啟 GitHub Pages 網站並輸入 GAS URL | ☐ |
 | 完整測試精靈 6 步驟流程 | ☐ |
