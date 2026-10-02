@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google 表單建立精靈</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>Google 表單建立精靈</h1>
+    <p class="subtitle">從 Google 試算表建立 Google 表單</p>
+  </header>
+
+  <main class="wizard-container">
+    <!-- 步驟指示器 -->
+    <nav class="step-indicators" aria-label="步驟導覽">
+      <ol id="stepNav">
+        <li class="step-dot active" data-step="0">1</li>
+        <li class="step-dot" data-step="1">2</li>
+        <li class="step-dot" data-step="2">3</li>
+        <li class="step-dot" data-step="3">4</li>
+        <li class="step-dot" data-step="4">5</li>
+        <li class="step-dot" data-step="5">6</li>
+      </ol>
+      <div class="step-labels">
+        <span>輸入網址</span>
+        <span>選擇試算表</span>
+        <span>選擇工作表</span>
+        <span>設定欄位</span>
+        <span>資料夾與資訊</span>
+        <span>顯示結果</span>
+      </div>
+    </nav>
+
+    <!-- 步驟一：輸入 GAS Web App URL -->
+    <section class="wizard-step active" id="step-0">
+      <h2>步驟一：輸入 GAS Web App URL</h2>
+      <p class="step-desc">請輸入您的 Google Apps Script Web App 部署網址，此網址將用於所有後端資料操作。</p>
+      <div class="form-group">
+        <label for="gasUrl">GAS Web App URL</label>
+        <input type="url" id="gasUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+      </div>
+      <div class="button-row">
+        <button type="button" id="saveUrlBtn" class="btn btn-secondary">儲存網址</button>
+        <button type="button" id="step0Next" class="btn btn-primary">下一步</button>
+      </div>
+      <div class="message-area" id="step0Message"></div>
+    </section>
+
+    <!-- 步驟二：選擇 Google 試算表 -->
+    <section class="wizard-step" id="step-1">
+      <h2>步驟二：選擇 Google 試算表</h2>
+      <p class="step-desc">請從您的 Google Drive 中選擇一份試算表。</p>
+      <div class="form-group">
+        <label for="spreadsheetSelect">選擇試算表</label>
+        <select id="spreadsheetSelect" disabled>
+          <option value="">載入中…</option>
+        </select>
+      </div>
+      <button type="button" id="refreshSpreadsheetsBtn" class="btn btn-secondary btn-sm">重新載入</button>
+      <div class="button-row">
+        <button type="button" id="step1Back" class="btn btn-secondary">上一步</button>
+        <button type="button" id="step1Next" class="btn btn-primary">下一步</button>
+      </div>
+      <div class="message-area" id="step1Message"></div>
+    </section>
+
+    <!-- 步驟三：選擇工作表 -->
+    <section class="wizard-step" id="step-2">
+      <h2>步驟三：選擇工作表</h2>
+      <p class="step-desc">請選擇試算表中的工作表分頁，系統將讀取第一列作為欄位標題。</p>
+      <div class="form-group">
+        <label for="sheetSelect">選擇工作表</label>
+        <select id="sheetSelect" disabled>
+          <option value="">載入中…</option>
+        </select>
+      </div>
+      <button type="button" id="refreshSheetsBtn" class="btn btn-secondary btn-sm">重新載入</button>
+      <div class="button-row">
+        <button type="button" id="step2Back" class="btn btn-secondary">上一步</button>
+        <button type="button" id="step2Next" class="btn btn-primary">下一步</button>
+      </div>
+      <div class="message-area" id="step2Message"></div>
+    </section>
+
+    <!-- 步驟四：設定表單欄位 -->
+    <section class="wizard-step" id="step-3">
+      <h2>步驟四：設定表單欄位</h2>
+      <p class="step-desc">為每一個欄位設定問題類型、問題標題、是否必填，以及（如適用）選項內容。</p>
+      <button type="button" id="refreshHeadersBtn" class="btn btn-secondary btn-sm">重新載入欄位</button>
+      <div id="fieldsContainer" class="fields-container">
+        <p class="loading-text">載入中…</p>
+      </div>
+      <div class="button-row">
+        <button type="button" id="step3Back" class="btn btn-secondary">上一步</button>
+        <button type="button" id="step3Next" class="btn btn-primary">下一步</button>
+      </div>
+      <div class="message-area" id="step3Message"></div>
+    </section>
+
+    <!-- 步驟五：選擇目標資料夾與表單資訊 -->
+    <section class="wizard-step" id="step-4">
+      <h2>步驟五：選擇目標資料夾與表單資訊</h2>
+      <p class="step-desc">請選擇表單儲存的目標資料夾，並輸入表單標題與說明。</p>
+      <div class="form-group">
+        <label for="folderSelect">目標資料夾</label>
+        <select id="folderSelect" disabled>
+          <option value="">載入中…</option>
+        </select>
+      </div>
+      <button type="button" id="refreshFoldersBtn" class="btn btn-secondary btn-sm">重新載入</button>
+      <div class="form-group">
+        <label for="formTitle">表單標題</label>
+        <input type="text" id="formTitle" placeholder="請輸入表單標題">
+      </div>
+      <div class="form-group">
+        <label for="formDescription">表單說明</label>
+        <textarea id="formDescription" rows="4" placeholder="請輸入表單說明（選填）"></textarea>
+      </div>
+      <div class="button-row">
+        <button type="button" id="step4Back" class="btn btn-secondary">上一步</button>
+        <button type="button" id="step4Next" class="btn btn-primary">下一步</button>
+      </div>
+      <div class="message-area" id="step4Message"></div>
+    </section>
+
+    <!-- 步驟六：顯示結果 -->
+    <section class="wizard-step" id="step-5">
+      <h2>步驟六：顯示結果</h2>
+      <p class="step-desc">表單已建立完成！以下是您的表單連結。</p>
+      <div id="resultsContainer" class="results-container">
+        <div class="result-item">
+          <label>編輯連結（Edit URL）</label>
+          <div class="result-row">
+            <input type="text" id="editUrlResult" readonly>
+            <button type="button" class="btn btn-secondary btn-sm copy-btn" data-target="editUrlResult">複製</button>
+          </div>
+        </div>
+        <div class="result-item">
+          <label>發布連結（Published URL）</label>
+          <div class="result-row">
+            <input type="text" id="publishedUrlResult" readonly>
+            <button type="button" class="btn btn-secondary btn-sm copy-btn" data-target="publishedUrlResult">複製</button>
+          </div>
+        </div>
+      </div>
+      <div id="resultLoading" class="result-loading">
+        <p>正在建立表單，請稍候…</p>
+      </div>
+      <div class="button-row">
+        <button type="button" id="step5Back" class="btn btn-secondary">上一步</button>
+        <button type="button" id="restartBtn" class="btn btn-primary">重新開始</button>
+      </div>
+      <div class="message-area" id="step5Message"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Google 表單建立精靈 &mdash; 由 Google Apps Script 驅動</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
