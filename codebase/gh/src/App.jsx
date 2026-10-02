@@ -6,7 +6,7 @@ import StepSheets from './components/StepSheets'
 import StepFields from './components/StepFields'
 import StepFolder from './components/StepFolder'
 import StepResult from './components/StepResult'
-import { STEP_LABELS, CHOICE_TYPES } from './constants'
+import { STEP_LABELS, CHOICE_TYPES, EMPTY_FIELD } from './constants'
 
 const TOTAL_STEPS = STEP_LABELS.length
 
@@ -14,7 +14,6 @@ const initialWizardState = {
   spreadsheetId: '',
   spreadsheetName: '',
   sheetName: '',
-  headers: [],
   fields: [],
   folderId: '',
   formTitle: '',
@@ -42,7 +41,6 @@ export default function App() {
       spreadsheetId: id,
       spreadsheetName: name,
       sheetName: '',
-      headers: [],
       fields: [],
     }))
   }, [])
@@ -51,19 +49,12 @@ export default function App() {
     setWiz((prev) => ({
       ...prev,
       sheetName: name,
-      headers: [],
       fields: [],
     }))
   }, [])
 
-  const setHeaders = useCallback((headers) => {
-    const fields = headers.map((h) => ({
-      title: h.title,
-      type: '簡答',
-      required: false,
-      options: [],
-    }))
-    setWiz((prev) => ({ ...prev, headers, fields }))
+  const setFields = useCallback((fields) => {
+    setWiz((prev) => ({ ...prev, fields }))
   }, [])
 
   const updateField = useCallback((index, fieldPatch) => {
@@ -71,6 +62,30 @@ export default function App() {
       const fields = prev.fields.map((f, i) =>
         i === index ? { ...f, ...fieldPatch } : f
       )
+      return { ...prev, fields }
+    })
+  }, [])
+
+  const addField = useCallback(() => {
+    setWiz((prev) => ({
+      ...prev,
+      fields: [...prev.fields, { ...EMPTY_FIELD }],
+    }))
+  }, [])
+
+  const removeField = useCallback((index) => {
+    setWiz((prev) => ({
+      ...prev,
+      fields: prev.fields.filter((_, i) => i !== index),
+    }))
+  }, [])
+
+  const moveField = useCallback((index, direction) => {
+    setWiz((prev) => {
+      const fields = [...prev.fields]
+      const target = index + direction
+      if (target < 0 || target >= fields.length) return prev
+      ;[fields[index], fields[target]] = [fields[target], fields[index]]
       return { ...prev, fields }
     })
   }, [])
@@ -128,10 +143,12 @@ export default function App() {
           <StepFields
             spreadsheetId={wiz.spreadsheetId}
             sheetName={wiz.sheetName}
-            headers={wiz.headers}
             fields={wiz.fields}
-            onHeadersLoaded={setHeaders}
+            onFieldsLoaded={setFields}
             onUpdateField={updateField}
+            onAddField={addField}
+            onRemoveField={removeField}
+            onMoveField={moveField}
             onNext={goNext}
             onBack={goBack}
           />

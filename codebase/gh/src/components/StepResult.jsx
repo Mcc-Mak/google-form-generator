@@ -40,7 +40,7 @@ export default function StepResult({ payload, onBack, onRestart }) {
           <dd>{payload.description || '（無）'}</dd>
           <dt>儲存資料夾 ID</dt>
           <dd>{payload.folderId || '（未選擇）'}</dd>
-          <dt>欄位數量</dt>
+          <dt>問題數量</dt>
           <dd>{payload.fields.length}</dd>
         </dl>
       </div>

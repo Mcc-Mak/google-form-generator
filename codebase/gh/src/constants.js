@@ -13,11 +13,20 @@ export const QUESTION_TYPES = [
 
 export const CHOICE_TYPES = ['單選', '核取方塊', '下拉式清單']
 
+export const SHEET_COLUMNS = {
+  TYPE: '問題類型',
+  TITLE: '問題標題',
+  REQUIRED: '必填',
+  OPTIONS: '選項',
+}
+
 export const STEP_LABELS = [
   '輸入網址',
   '選擇試算表',
   '選擇工作表',
-  '設定欄位',
+  '設定問題',
   '資料夾與資訊',
   '顯示結果',
 ]
+
+export const EMPTY_FIELD = { type: '簡答', title: '', required: false, options: [] }

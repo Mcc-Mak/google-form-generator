@@ -38,7 +38,7 @@ export default function StepSheets({ spreadsheetId, sheetName, onSelect, onNext,
     <section className="wizard-step active">
       <h2>步驟三：選擇工作表</h2>
       <p className="step-desc">
-        請選擇試算表中的工作表分頁，系統將讀取第一列作為欄位標題。
+        請選擇試算表中的工作表分頁，系統將從中匯入問題定義。
       </p>
       <div className="form-group">
         <label htmlFor="sheetSelect">選擇工作表</label>

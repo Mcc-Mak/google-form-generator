@@ -117,7 +117,62 @@
 
 ---
 
-## 4. listFolders
+## 4. getQuestions
+
+### 說明
+
+從指定工作表匯入問題定義。系統會檢查第一列是否包含「問題類型」與「問題標題」欄位：
+
+- **模式一（問題定義表）**：若第一列包含「問題類型」與「問題標題」欄位，則逐列讀取問題，支援 `問題類型`、`問題標題`、`必填`（是/否）、`選項`（以 `|` 分隔）四個欄位。
+- **模式二（回退模式）**：若未包含上述欄位，則將第一列各欄位視為問題標題，類型預設為「簡答」，必填預設為否。
+
+### 請求 JSON 範例
+
+```json
+{
+  "action": "getQuestions",
+  "spreadsheetId": "1AbCdEfGhIjKlMnOpQrStUvWxYz1234567890",
+  "sheetName": "客戶資料"
+}
+```
+
+### 回應 JSON 範例（模式一）
+
+```json
+{
+  "ok": true,
+  "data": [
+    { "type": "簡答", "title": "姓名", "required": true, "options": [] },
+    { "type": "單選", "title": "滿意度", "required": true, "options": ["非常滿意", "滿意", "普通", "不滿意"] },
+    { "type": "日期", "title": "填寫日期", "required": false, "options": [] }
+  ]
+}
+```
+
+### 回應 JSON 範例（模式二 — 回退）
+
+```json
+{
+  "ok": true,
+  "data": [
+    { "type": "簡答", "title": "姓名", "required": false, "options": [] },
+    { "type": "簡答", "title": "電子郵件", "required": false, "options": [] }
+  ]
+}
+```
+
+### 錯誤回應範例
+
+```json
+{
+  "ok": false,
+  "error": "No sheet found with name '客戶資料'."
+}
+```
+
+---
+
+## 5. listFolders
 
 ### 說明
 
@@ -155,7 +210,7 @@
 
 ---
 
-## 5. createForm
+## 6. createForm
 
 ### 說明
 

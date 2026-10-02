@@ -2,6 +2,19 @@
 
 本專案版本依 `major.minor.patch` 格式管理。
 
+## 0.4.0
+
+- **新增動態問題編輯器**：步驟四從固定欄位對應改為 Google Forms 風格的動態問題編輯器，支援新增、刪除、上移/下移排序及即時編輯問題類型、標題、必填與選項。
+- **新增 `getQuestions` action**：GAS 後端新增 `getQuestions` 端點，從試算表匯入問題定義。支援兩種模式：
+  - 模式一（問題定義表）：工作表含 `問題類型`/`問題標題`/`必填`/`選項` 四欄，逐列讀取完整問題定義。
+  - 模式二（回退模式）：工作表無上述欄位時，將第一列各欄位視為問題標題，類型預設為「簡答」。
+- **前端 API 新增 `getQuestions`**：`api.js` 新增 `getQuestions` 匯出函式。
+- **新增 `SHEET_COLUMNS` 常數**：`constants.js` 新增工作表欄位名稱常數與 `EMPTY_FIELD` 預設問題物件。
+- **步驟標籤更新**：步驟四由「設定欄位」改為「設定問題」，步驟三描述更新。
+- **結果頁標籤更新**：「欄位數量」改為「問題數量」。
+- **新增 CSS 樣式**：`btn-icon`、`field-row`、`field-actions`、`checkbox-inline`、`step-toolbar`、`import-info` 等新元件樣式。
+- **更新文件**：`Schema.md` 新增問題匯入慣例與兩種模式說明；`API.md` 新增 `getQuestions` 端點文件。
+
 ## 0.3.5
 
 - 修正 CORS 問題：前端 fetch 改用 `Content-Type: text/plain;charset=utf-8` 避免 preflight OPTIONS 請求，GAS Web App 不支援 OPTIONS 預檢。

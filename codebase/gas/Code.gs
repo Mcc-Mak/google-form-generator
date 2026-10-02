@@ -11,6 +11,7 @@ var ACTIONS = {
   LIST_SPREADSHEETS: 'listSpreadsheets',
   LIST_SHEETS: 'listSheets',
   GET_HEADERS: 'getHeaders',
+  GET_QUESTIONS: 'getQuestions',
   LIST_FOLDERS: 'listFolders',
   CREATE_FORM: 'createForm'
 };
@@ -65,6 +66,8 @@ function routeAction(action, params) {
       return handleListSheets(params);
     case ACTIONS.GET_HEADERS:
       return handleGetHeaders(params);
+    case ACTIONS.GET_QUESTIONS:
+      return handleGetQuestions(params);
     case ACTIONS.LIST_FOLDERS:
       return handleListFolders(params);
     case ACTIONS.CREATE_FORM:
@@ -128,6 +131,87 @@ function handleGetHeaders(params) {
     var data = values.map(function (title, index) {
       return { index: index, title: title };
     });
+    return { ok: true, data: data };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+/**
+ * 從工作表匯入問題定義。
+ *
+ * 工作表需包含以下標題欄（第一列）：
+ *   - 問題類型（簡答/段落/單選/核取方塊/下拉式清單/線性刻度/日期/時間）
+ *   - 問題標題
+ *   - 必填（是/否）
+ *   - 選項（以 | 分隔，僅選擇類型需要）
+ *
+ * 若工作表未包含「問題類型」與「問題標題」欄，則回退為舊模式：
+ * 將第一列各欄位視為問題標題，類型預設為「簡答」。
+ *
+ * @param {Object} params 需包含 spreadsheetId 與 sheetName。
+ * @return {Object} { ok: true, data: [{ type, title, required, options }] }
+ */
+function handleGetQuestions(params) {
+  try {
+    var spreadsheetId = params.spreadsheetId;
+    var sheetName = params.sheetName;
+    var sheet = SpreadsheetApp.openById(spreadsheetId).getSheetByName(sheetName);
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+
+    if (lastRow === 0 || lastCol === 0) {
+      return { ok: true, data: [] };
+    }
+
+    var values = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+    var headers = values[0];
+
+    var typeCol = -1, titleCol = -1, requiredCol = -1, optionsCol = -1;
+    for (var i = 0; i < headers.length; i++) {
+      var h = headers[i].toString().trim();
+      if (h === '問題類型') typeCol = i;
+      else if (h === '問題標題') titleCol = i;
+      else if (h === '必填') requiredCol = i;
+      else if (h === '選項') optionsCol = i;
+    }
+
+    var data = [];
+
+    if (typeCol !== -1 && titleCol !== -1) {
+      for (var row = 1; row < values.length; row++) {
+        var rowData = values[row];
+        var title = rowData[titleCol] ? rowData[titleCol].toString().trim() : '';
+        if (!title) continue;
+
+        var type = rowData[typeCol] ? rowData[typeCol].toString().trim() : '簡答';
+        if (!type) type = '簡答';
+
+        var required = false;
+        if (requiredCol !== -1 && rowData[requiredCol]) {
+          var reqVal = rowData[requiredCol].toString().trim().toLowerCase();
+          required = reqVal === '是' || reqVal === 'true' || reqVal === '1';
+        }
+
+        var options = [];
+        if (optionsCol !== -1 && rowData[optionsCol]) {
+          options = rowData[optionsCol]
+            .toString()
+            .split('|')
+            .map(function (s) { return s.trim(); })
+            .filter(function (s) { return s !== ''; });
+        }
+
+        data.push({ type: type, title: title, required: required, options: options });
+      }
+    } else {
+      for (var col = 0; col < headers.length; col++) {
+        var headerTitle = headers[col] ? headers[col].toString().trim() : '';
+        if (!headerTitle) continue;
+        data.push({ type: '簡答', title: headerTitle, required: false, options: [] });
+      }
+    }
+
     return { ok: true, data: data };
   } catch (e) {
     return { ok: false, error: e.message };

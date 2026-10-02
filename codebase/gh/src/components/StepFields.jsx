@@ -1,26 +1,30 @@
 import { useState, useEffect } from 'react'
-import { getHeaders } from '../api'
+import { getQuestions } from '../api'
 import { QUESTION_TYPES, CHOICE_TYPES } from '../constants'
 
 export default function StepFields({
   spreadsheetId,
   sheetName,
-  headers,
   fields,
-  onHeadersLoaded,
+  onFieldsLoaded,
   onUpdateField,
+  onAddField,
+  onRemoveField,
+  onMoveField,
   onNext,
   onBack,
 }) {
-  const [loading, setLoading] = useState(headers.length === 0)
+  const [loading, setLoading] = useState(fields.length === 0)
   const [error, setError] = useState(null)
+  const [imported, setImported] = useState(false)
 
   const load = async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await getHeaders(spreadsheetId, sheetName)
-      onHeadersLoaded(data || [])
+      const data = await getQuestions(spreadsheetId, sheetName)
+      onFieldsLoaded(data || [])
+      setImported(true)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -29,7 +33,7 @@ export default function StepFields({
   }
 
   useEffect(() => {
-    if (headers.length === 0) {
+    if (fields.length === 0) {
       load()
     } else {
       setLoading(false)
@@ -40,9 +44,13 @@ export default function StepFields({
   const handleNext = () => {
     for (let i = 0; i < fields.length; i++) {
       if (!fields[i].title || fields[i].title.trim() === '') {
-        setError('欄位 ' + (i + 1) + ' 的問題標題不可為空。')
+        setError('問題 ' + (i + 1) + ' 的標題不可為空。')
         return
       }
+    }
+    if (fields.length === 0) {
+      setError('至少需要一個問題。')
+      return
     }
     setError(null)
     onNext()
@@ -50,18 +58,35 @@ export default function StepFields({
 
   return (
     <section className="wizard-step active">
-      <h2>步驟四：設定表單欄位</h2>
+      <h2>步驟四：設定表單問題</h2>
       <p className="step-desc">
-        為每一個欄位設定問題類型、問題標題、是否必填，以及（如適用）選項內容。
+        從試算表匯入的問題如下，您可新增、刪除、排序及編輯每一個問題。
       </p>
-      <button
-        type="button"
-        className="btn btn-secondary btn-sm"
-        onClick={load}
-        disabled={loading}
-      >
-        重新載入欄位
-      </button>
+
+      <div className="step-toolbar">
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          onClick={load}
+          disabled={loading}
+        >
+          重新匯入
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary btn-sm"
+          onClick={onAddField}
+          disabled={loading}
+        >
+          + 新增問題
+        </button>
+      </div>
+
+      {imported && !loading && fields.length > 0 && (
+        <p className="import-info">
+          已從試算表匯入 {fields.length} 個問題。
+        </p>
+      )}
 
       {loading && <p className="loading-text">載入中…</p>}
 
@@ -72,7 +97,7 @@ export default function StepFields({
       )}
 
       {!loading && !error && fields.length === 0 && (
-        <p className="error-msg">沒有可用的欄位標題。</p>
+        <p className="error-msg">沒有匯入任何問題，請點「新增問題」手動加入。</p>
       )}
 
       <div className="fields-container">
@@ -80,8 +105,12 @@ export default function StepFields({
           <FieldCard
             key={index}
             index={index}
+            total={fields.length}
             field={field}
             onUpdate={onUpdateField}
+            onRemove={onRemoveField}
+            onMoveUp={() => onMoveField(index, -1)}
+            onMoveDown={() => onMoveField(index, 1)}
           />
         ))}
       </div>
@@ -94,38 +123,75 @@ export default function StepFields({
           下一步
         </button>
       </div>
-      {error && (
-        <div className="message-area">
-          <p className="error-msg">{error}</p>
-        </div>
-      )}
     </section>
   )
 }
 
-function FieldCard({ index, field, onUpdate }) {
+function FieldCard({ index, total, field, onUpdate, onRemove, onMoveUp, onMoveDown }) {
   const isChoice = CHOICE_TYPES.includes(field.type)
 
   return (
     <div className="field-card">
       <div className="field-header">
-        <span className="field-number">欄位 {index + 1}</span>
-        <span className="field-column-title">資料欄位：{field.title}</span>
+        <span className="field-number">{index + 1}</span>
+        <div className="field-actions">
+          <button
+            type="button"
+            className="btn-icon"
+            onClick={onMoveUp}
+            disabled={index === 0}
+            title="上移"
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            className="btn-icon"
+            onClick={onMoveDown}
+            disabled={index === total - 1}
+            title="下移"
+          >
+            ↓
+          </button>
+          <button
+            type="button"
+            className="btn-icon btn-icon-danger"
+            onClick={onRemove}
+            title="刪除"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
-      <div className="form-group">
-        <label htmlFor={'fieldType-' + index}>問題類型</label>
-        <select
-          id={'fieldType-' + index}
-          value={field.type}
-          onChange={(e) => onUpdate(index, { type: e.target.value })}
-        >
-          {QUESTION_TYPES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
+      <div className="field-row">
+        <div className="form-group field-type-group">
+          <label htmlFor={'fieldType-' + index}>問題類型</label>
+          <select
+            id={'fieldType-' + index}
+            value={field.type}
+            onChange={(e) => onUpdate(index, { type: e.target.value })}
+          >
+            {QUESTION_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group field-required-group">
+          <label>&nbsp;</label>
+          <label className="checkbox-inline">
+            <input
+              type="checkbox"
+              id={'fieldRequired-' + index}
+              checked={field.required}
+              onChange={(e) => onUpdate(index, { required: e.target.checked })}
+            />
+            必填
+          </label>
+        </div>
       </div>
 
       <div className="form-group">
@@ -134,18 +200,9 @@ function FieldCard({ index, field, onUpdate }) {
           type="text"
           id={'fieldTitle-' + index}
           value={field.title}
+          placeholder="輸入問題標題"
           onChange={(e) => onUpdate(index, { title: e.target.value })}
         />
-      </div>
-
-      <div className="form-group checkbox-group">
-        <input
-          type="checkbox"
-          id={'fieldRequired-' + index}
-          checked={field.required}
-          onChange={(e) => onUpdate(index, { required: e.target.checked })}
-        />
-        <label htmlFor={'fieldRequired-' + index}>必填</label>
       </div>
 
       {isChoice && (

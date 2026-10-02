@@ -51,6 +51,9 @@ export const listSheets = (spreadsheetId) =>
 export const getHeaders = (spreadsheetId, sheetName) =>
   callGas({ action: 'getHeaders', spreadsheetId, sheetName })
 
+export const getQuestions = (spreadsheetId, sheetName) =>
+  callGas({ action: 'getQuestions', spreadsheetId, sheetName })
+
 export const listFolders = () => callGas({ action: 'listFolders' })
 
 export const createForm = (params) =>
