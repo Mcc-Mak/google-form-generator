@@ -7,14 +7,13 @@
 - **自動命名與自動儲存**：建立表單時自動產生部署 ID（3 位數滾動計數器，001–999，超過則回到 001），以 `PropertiesService` 持久化儲存。
   - Google 表單檔案自動命名為 `Google表格-部署${部署ID}`（表單顯示標題仍為使用者輸入的標題）。
   - 自動建立回應試算表 `Google試算表-部署${部署ID}`，移動至指定資料夾，並透過 `form.setDestination()` 連結表單回應。
-  - 自動產生 PDF 檔案 `Google表格-PDF-${時間戳記}-部署${部署ID}.pdf`（時間戳記格式 `yyyyMMddHHmmss`），儲存至指定資料夾。PDF 透過 `DocumentApp` 建立暫存文件 → Drive API v3 匯出為 PDF → 儲存至資料夾 → 刪除暫存文件。
-  - PDF 內容包含 QR Code（透過 api.qrserver.com 產生）。
+  - 自動產生 PDF 檔案 `Google表格-PDF-${時間戳記}-部署${部署ID}.pdf`（時間戳記格式 `yyyyMMddHHmmss`），儲存至指定資料夾。PDF 透過 Drive API v3 multipart 上傳 HTML 轉為 Google Document → 匯出為 PDF → 儲存至資料夾 → 刪除暫存文件（不使用 `DocumentApp`，無需額外 OAuth 授權）。
+  - PDF 內容包含 QR Code（透過 api.qrserver.com 產生，以 base64 內嵌）。
 - **前端結果頁更新**：
   - 新增「建立檔案」卡片，顯示部署 ID、表單檔案名稱、回應試算表連結/名稱、PDF 檔案名稱/連結。
   - 開發人員卡片新增回應試算表連結（短網址）、部署 ID、PDF 檔案連結。
   - 瀏覽器端 PDF 匯出（列印）檔名改為 `Google表格-PDF-${時間戳記}-部署${部署ID}`。
   - PDF 內容新增部署 ID、回應試算表連結等資訊。
-- **新增 `documents` OAuth scope**：`appsscript.json` 新增 `https://www.googleapis.com/auth/documents` 以支援 `DocumentApp` 產生 PDF。
 - **API 回應欄位擴充**：`createForm` 回應新增 `deploymentId`、`formFileName`、`responseSheetId`、`responseSheetUrl`、`responseSheetName`、`shortResponseSheetUrl`、`pdfFileName`、`pdfFileId`、`pdfFileUrl`。
 
 ## 0.5.7

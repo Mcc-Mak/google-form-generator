@@ -368,92 +368,136 @@ function formatTimestamp() {
 }
 
 /**
- * 將標籤與 URL 附加至 Google Document 段落。
- * @param {DocumentApp.Body} body DocumentApp Body 物件。
- * @param {string} label 標籤文字。
- * @param {string} url URL 字串。
+ * 建立 PDF 內容的 HTML 字串。
+ * @param {Object} params 內容參數。
+ * @param {string} qrImgTag QR Code 的 <img> 標籤（空字串表示無 QR Code）。
+ * @return {string} 完整 HTML 字串。
  */
-function appendDocUrl(body, label, url) {
-  var labelPara = body.appendParagraph(label + '：');
-  labelPara.editAsText().setBold(true).setFontSize(9);
-  var urlPara = body.appendParagraph(url || '（無）');
-  urlPara.editAsText().setFontSize(9);
+function buildPdfHtml(params, qrImgTag) {
+  var esc = function (s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  };
+
+  var urlItem = function (label, value) {
+    return '<div style="margin:6px 0">' +
+      '<div style="font-size:9pt;font-weight:bold;color:#5f6368">' + esc(label) + '</div>' +
+      '<div style="font-size:9pt;font-family:monospace">' + esc(value || '（無）') + '</div>' +
+      '</div>';
+  };
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>' +
+    '<body style="font-family:\'PingFang TC\',\'Microsoft JhengHei\',sans-serif;color:#202124;line-height:1.5">' +
+    '<h1 style="font-size:16pt">Google 表單建立結果</h1>' +
+    '<p><strong>表單標題：</strong>' + esc(params.title || '（未命名）') + '</p>' +
+    '<p><strong>表單說明：</strong>' + esc(params.description || '（無）') + '</p>' +
+    '<p><strong>部署 ID：</strong>' + esc(params.deploymentId || '') + '</p>' +
+    '<div style="margin-bottom:16px">' +
+    '<h2 style="font-size:12pt;background:#1a73e8;color:#fff;padding:5px 8px;margin:0 0 8px 0">一般使用者</h2>' +
+    urlItem('表單連結（完整網址）', params.publishedUrl) +
+    urlItem('表單連結（短網址）', params.shortViewUrl) +
+    (qrImgTag
+      ? '<div style="margin-top:8px"><div style="font-size:9pt;font-weight:bold;color:#5f6368">QR Code（短網址）</div>' +
+        qrImgTag + '</div>'
+      : '') +
+    '</div>' +
+    '<div style="margin-bottom:16px">' +
+    '<h2 style="font-size:12pt;background:#1e8e3e;color:#fff;padding:5px 8px;margin:0 0 8px 0">維護人員</h2>' +
+    urlItem('表單編輯連結（完整網址）', params.editUrl) +
+    urlItem('表單連結（完整網址）', params.publishedUrl) +
+    urlItem('表單連結（短網址）', params.shortViewUrl) +
+    urlItem('回應試算表連結', params.responseSheetUrl) +
+    '</div>' +
+    '<div style="margin-bottom:16px">' +
+    '<h2 style="font-size:12pt;background:#5f6368;color:#fff;padding:5px 8px;margin:0 0 8px 0">開發人員</h2>' +
+    urlItem('表單連結（短網址）', params.shortViewUrl) +
+    urlItem('回應試算表連結（短網址）', params.shortResponseSheetUrl) +
+    urlItem('來源試算表連結（短網址）', params.shortSpreadsheetUrl) +
+    urlItem('表單 ID', params.formId) +
+    '</div>' +
+    '</body></html>';
 }
 
 /**
  * 在 Google Drive 指定資料夾中產生 PDF 檔案。
- * 建立暫存 Google Document → 寫入內容 → 透過 Drive API v3 匯出為 PDF → 儲存至資料夾 → 刪除暫存文件。
+ * 透過 Drive API v3 multipart 上傳 HTML 轉為 Google Document → 匯出為 PDF → 儲存至資料夾 → 刪除暫存文件。
+ * 不使用 DocumentApp，避免額外 OAuth 授權。
  * @param {Folder} folder 目標 Drive 資料夾。
  * @param {string} fileName PDF 檔案名稱。
  * @param {Object} params 內容參數。
  * @return {Object} { fileName, fileId, fileUrl }
  */
 function generatePdfToDrive(folder, fileName, params) {
-  var doc = DocumentApp.create('temp_' + fileName);
-  var body = doc.getBody();
+  var token = ScriptApp.getOAuthToken();
 
-  var heading = body.appendParagraph('Google 表單建立結果');
-  heading.setHeading(DocumentApp.ParagraphHeading.HEADING1);
-  heading.editAsText().setFontSize(16);
-
-  var titlePara = body.appendParagraph('表單標題：' + (params.title || '（未命名）'));
-  titlePara.editAsText().setBold(true);
-  body.appendParagraph('表單說明：' + (params.description || '（無）'));
-  body.appendParagraph('部署 ID：' + params.deploymentId);
-  body.appendParagraph('');
-
-  var userHeading = body.appendParagraph('一般使用者');
-  userHeading.setHeading(DocumentApp.ParagraphHeading.HEADING2);
-  userHeading.editAsText().setForegroundColor('#1a73e8');
-  appendDocUrl(body, '表單連結（完整網址）', params.publishedUrl);
-  appendDocUrl(body, '表單連結（短網址）', params.shortViewUrl);
-
+  var qrImgTag = '';
   if (params.shortViewUrl) {
     try {
       var qrResponse = UrlFetchApp.fetch(
         'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(params.shortViewUrl)
       );
-      var qrBlob = qrResponse.getBlob().setName('QR Code');
-      body.appendImage(qrBlob);
+      var qrBase64 = Utilities.base64Encode(qrResponse.getContent());
+      qrImgTag = '<img src="data:image/png;base64,' + qrBase64 + '" style="width:150px;height:150px" />';
     } catch (err) {
       // QR Code 產生失敗則略過
     }
   }
 
-  body.appendParagraph('');
+  var html = buildPdfHtml(params, qrImgTag);
 
-  var maintainerHeading = body.appendParagraph('維護人員');
-  maintainerHeading.setHeading(DocumentApp.ParagraphHeading.HEADING2);
-  maintainerHeading.editAsText().setForegroundColor('#1e8e3e');
-  appendDocUrl(body, '表單編輯連結（完整網址）', params.editUrl);
-  appendDocUrl(body, '表單連結（完整網址）', params.publishedUrl);
-  appendDocUrl(body, '表單連結（短網址）', params.shortViewUrl);
-  appendDocUrl(body, '回應試算表連結', params.responseSheetUrl);
+  var boundary = 'gas_pdf_' + Utilities.getUuid();
+  var metadata = JSON.stringify({
+    name: 'temp_' + fileName,
+    mimeType: 'application/vnd.google-apps.document'
+  });
 
-  body.appendParagraph('');
+  var multipartBody =
+    '--' + boundary + '\r\n' +
+    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+    metadata + '\r\n' +
+    '--' + boundary + '\r\n' +
+    'Content-Type: text/html; charset=UTF-8\r\n\r\n' +
+    html + '\r\n' +
+    '--' + boundary + '--';
 
-  var devHeading = body.appendParagraph('開發人員');
-  devHeading.setHeading(DocumentApp.ParagraphHeading.HEADING2);
-  devHeading.editAsText().setForegroundColor('#5f6368');
-  appendDocUrl(body, '表單連結（短網址）', params.shortViewUrl);
-  appendDocUrl(body, '回應試算表連結（短網址）', params.shortResponseSheetUrl);
-  appendDocUrl(body, '來源試算表連結（短網址）', params.shortSpreadsheetUrl);
-  appendDocUrl(body, '表單 ID', params.formId);
+  var uploadResponse = UrlFetchApp.fetch(
+    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+    {
+      method: 'post',
+      headers: { Authorization: 'Bearer ' + token },
+      contentType: 'multipart/related; boundary=' + boundary,
+      payload: multipartBody,
+      muteHttpExceptions: true
+    }
+  );
 
-  doc.saveAndClose();
+  var uploadCode = uploadResponse.getResponseCode();
+  if (uploadCode !== 200) {
+    throw new Error('PDF 暫存文件建立失敗（HTTP ' + uploadCode + '）：' + uploadResponse.getContentText());
+  }
 
-  var token = ScriptApp.getOAuthToken();
-  var exportUrl = 'https://www.googleapis.com/drive/v3/files/' + doc.getId() +
+  var docFile = JSON.parse(uploadResponse.getContentText());
+
+  var exportUrl = 'https://www.googleapis.com/drive/v3/files/' + docFile.id +
     '/export?mimeType=' + encodeURIComponent('application/pdf');
   var exportResponse = UrlFetchApp.fetch(exportUrl, {
     headers: { Authorization: 'Bearer ' + token },
     muteHttpExceptions: true
   });
 
+  var exportCode = exportResponse.getResponseCode();
+  if (exportCode !== 200) {
+    DriveApp.getFileById(docFile.id).setTrashed(true);
+    throw new Error('PDF 匯出失敗（HTTP ' + exportCode + '）：' + exportResponse.getContentText());
+  }
+
   var pdfBlob = exportResponse.getBlob().setName(fileName);
   var pdfFile = folder.createFile(pdfBlob);
 
-  DriveApp.getFileById(doc.getId()).setTrashed(true);
+  DriveApp.getFileById(docFile.id).setTrashed(true);
 
   return {
     fileName: pdfFile.getName(),

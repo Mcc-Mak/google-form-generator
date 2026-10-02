@@ -231,7 +231,7 @@
 8. 透過 `SpreadsheetApp.create()` 建立回應試算表 `Google試算表-部署${部署ID}`，移動至指定資料夾。
 9. 透過 `form.setDestination(FormApp.DestinationType.SPREADSHEET, responseSheetId)` 連結表單回應至新試算表。
 10. 透過 is.gd 縮短表單連結、回應試算表連結、來源試算表連結。
-11. 透過 `DocumentApp` 建立暫存文件，寫入建立結果（含 QR Code），經 Drive API v3 匯出為 PDF，儲存為 `Google表格-PDF-${時間戳記}-部署${部署ID}.pdf` 至指定資料夾，刪除暫存文件。
+11. 透過 Drive API v3 multipart 上傳 HTML 轉為 Google Document，再匯出為 PDF，儲存為 `Google表格-PDF-${時間戳記}-部署${部署ID}.pdf` 至指定資料夾，刪除暫存文件（不使用 `DocumentApp`，無需額外 OAuth 授權）。
 12. 回傳表單資訊、回應試算表資訊、PDF 檔案資訊等完整資料。
 
 ### 請求 JSON 範例
