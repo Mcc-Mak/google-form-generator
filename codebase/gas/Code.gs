@@ -13,7 +13,8 @@ var ACTIONS = {
   GET_HEADERS: 'getHeaders',
   GET_QUESTIONS: 'getQuestions',
   LIST_FOLDERS: 'listFolders',
-  CREATE_FORM: 'createForm'
+  CREATE_FORM: 'createForm',
+  DEBUG_FOLDERS: 'debugFolders'
 };
 
 // ==================== HTTP 端點 ====================
@@ -72,6 +73,8 @@ function routeAction(action, params) {
       return handleListFolders(params);
     case ACTIONS.CREATE_FORM:
       return handleCreateForm(params);
+    case ACTIONS.DEBUG_FOLDERS:
+      return handleDebugFolders(params);
     default:
       return { ok: false, error: '未知的動作：' + action };
   }
@@ -439,4 +442,57 @@ function handleCreateForm(params) {
   } catch (e) {
     return { ok: false, error: e.message };
   }
+}
+
+/**
+ * 診斷函式：測試不同方式列舉資料夾。
+ */
+function handleDebugFolders(_params) {
+  var result = {};
+
+  try {
+    var folders1 = DriveApp.searchFiles('mimeType = "application/vnd.google-apps.folder"');
+    var count1 = 0;
+    var sample1 = [];
+    while (folders1.hasNext()) {
+      var f = folders1.next();
+      count1++;
+      if (sample1.length < 5) {
+        sample1.push({ id: f.getId(), name: f.getName() });
+      }
+    }
+    result.searchFiles = { count: count1, sample: sample1 };
+  } catch (e) {
+    result.searchFiles = { error: e.message };
+  }
+
+  try {
+    var folders2 = DriveApp.getFolders();
+    var count2 = 0;
+    var sample2 = [];
+    while (folders2.hasNext()) {
+      var f2 = folders2.next();
+      count2++;
+      if (sample2.length < 5) {
+        sample2.push({ id: f2.getId(), name: f2.getName() });
+      }
+    }
+    result.getFolders = { count: count2, sample: sample2 };
+  } catch (e) {
+    result.getFolders = { error: e.message };
+  }
+
+  try {
+    var folders3 = DriveApp.searchFiles("mimeType = 'application/vnd.google-apps.folder'");
+    var count3 = 0;
+    while (folders3.hasNext()) {
+      folders3.next();
+      count3++;
+    }
+    result.searchFilesSingleQuote = { count: count3 };
+  } catch (e) {
+    result.searchFilesSingleQuote = { error: e.message };
+  }
+
+  return { ok: true, data: result };
 }
