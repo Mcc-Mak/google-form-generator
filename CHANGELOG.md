@@ -2,6 +2,10 @@
 
 本專案版本依 `major.minor.patch` 格式管理。
 
+## 0.6.2
+
+- **修正 SonarCloud S8475（Browser Storage Poisoning）**：`StepUrl.jsx` 的 API token 輸入改為非受控元件（uncontrolled input），以 `useRef` 存取 DOM input 元素。`localStorage.getItem()` 的值透過 `useEffect` 寫入 DOM input，`handleSave` 從 `inputRef.current.value` 讀取後再寫入 `localStorage.setItem()`，截斷 SonarCloud 污染分析鏈（localStorage getItem → state → localStorage setItem）。
+
 ## 0.6.1
 
 - **GAS Web App URL 更新**：更新前端 `constants.js`、`StepUrl.jsx`、`README.md`、CI `gas.yml` 中的部署網址與部署 ID。

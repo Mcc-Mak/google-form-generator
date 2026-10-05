@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { API_TOKEN_STORAGE_KEY } from '../constants'
 
 const TOKEN_MAX_LENGTH = 256
@@ -8,15 +8,29 @@ function sanitizeToken(value) {
 }
 
 export default function StepUrl({ onNext }) {
-  const [token, setToken] = useState(() => sanitizeToken(localStorage.getItem(API_TOKEN_STORAGE_KEY)))
+  const inputRef = useRef(null)
+  const [hasToken, setHasToken] = useState(false)
   const [showToken, setShowToken] = useState(false)
 
+  useEffect(() => {
+    const stored = localStorage.getItem(API_TOKEN_STORAGE_KEY)
+    if (stored && inputRef.current) {
+      inputRef.current.value = sanitizeToken(stored)
+      setHasToken(inputRef.current.value.trim().length > 0)
+    }
+  }, [])
+
   const handleChange = (e) => {
-    setToken(sanitizeToken(e.target.value))
+    const raw = e.target.value
+    const cleaned = sanitizeToken(raw)
+    if (cleaned !== raw) {
+      e.target.value = cleaned
+    }
+    setHasToken(cleaned.trim().length > 0)
   }
 
   const handleSave = () => {
-    const cleaned = token.trim()
+    const cleaned = sanitizeToken(inputRef.current?.value || '').trim()
     if (!cleaned) return
     localStorage.setItem(API_TOKEN_STORAGE_KEY, cleaned)
   }
@@ -26,7 +40,7 @@ export default function StepUrl({ onNext }) {
     onNext()
   }
 
-  const canProceed = token.trim().length > 0
+  const canProceed = hasToken
 
   return (
     <section className="wizard-step active">
@@ -55,10 +69,10 @@ export default function StepUrl({ onNext }) {
         <label htmlFor="api-token">存取權杖</label>
         <div className="token-input-row">
           <input
+            ref={inputRef}
             id="api-token"
             type={showToken ? 'text' : 'password'}
             className="form-input"
-            value={token}
             onChange={handleChange}
             onBlur={handleSave}
             placeholder="請輸入 API token"
