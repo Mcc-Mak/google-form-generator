@@ -1,13 +1,24 @@
 import { useState } from 'react'
 import { API_TOKEN_STORAGE_KEY } from '../constants'
 
+const TOKEN_MAX_LENGTH = 256
+
+function sanitizeToken(value) {
+  return String(value || '').replace(/[^A-Za-z0-9._-]/g, '').slice(0, TOKEN_MAX_LENGTH)
+}
+
 export default function StepUrl({ onNext }) {
-  const [token, setToken] = useState(() => localStorage.getItem(API_TOKEN_STORAGE_KEY) || '')
+  const [token, setToken] = useState(() => sanitizeToken(localStorage.getItem(API_TOKEN_STORAGE_KEY)))
   const [showToken, setShowToken] = useState(false)
 
+  const handleChange = (e) => {
+    setToken(sanitizeToken(e.target.value))
+  }
+
   const handleSave = () => {
-    if (!token.trim()) return
-    localStorage.setItem(API_TOKEN_STORAGE_KEY, token.trim())
+    const cleaned = token.trim()
+    if (!cleaned) return
+    localStorage.setItem(API_TOKEN_STORAGE_KEY, cleaned)
   }
 
   const handleNext = () => {
@@ -48,7 +59,7 @@ export default function StepUrl({ onNext }) {
             type={showToken ? 'text' : 'password'}
             className="form-input"
             value={token}
-            onChange={(e) => setToken(e.target.value)}
+            onChange={handleChange}
             onBlur={handleSave}
             placeholder="請輸入 API token"
             autoComplete="off"
