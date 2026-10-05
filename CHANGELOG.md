@@ -5,8 +5,8 @@
 ## 0.6.1
 
 - **GAS Web App URL 更新**：更新前端 `constants.js`、`StepUrl.jsx`、`README.md`、CI `gas.yml` 中的部署網址與部署 ID。
-- **存取權限限制為僅限自己**：`appsscript.json` 的 `webapp.access` 由 `ANYONE_ANONYMOUS` 改為 `MYSELF`，僅允許部署者本人存取 API，提升安全性。
-- 更新 `ConfigSettings.md`、`QuickStart.md`、`ADR.md`、`SRS.md`、`ProjectCharter.md` 等文件以反映新的存取設定。
+- **API token 存取控制**：`appsscript.json` 的 `webapp.access` 維持 `ANYONE_ANONYMOUS`（GAS Web App 跨域請求 CORS 所需），改在程式層加入 API token 驗證。所有請求須攜帶正確的 `token` 值，否則回傳未授權錯誤。前端 `api.js` 在每個請求中自動夾帶 `API_TOKEN`。
+- 更新 `ConfigSettings.md`、`QuickStart.md`、`ADR.md`、`SRS.md`、`ProjectCharter.md` 等文件以反映 token 驗證機制。
 
 ## 0.6.0
 

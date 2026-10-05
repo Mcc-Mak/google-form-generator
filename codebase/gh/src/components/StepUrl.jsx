@@ -16,7 +16,7 @@ export default function StepUrl({ onNext }) {
             https://script.google.com/macros/s/AKfycbyAOXxRKN86p4BsPrmUQmZN172JlfkKh5Q0TonJB42VL3xjexPJ2dLSkaTpOsDY2m-nUg/exec
           </dd>
           <dt>存取權限</dt>
-          <dd>僅限自己</dd>
+          <dd>任何人（需 API token）</dd>
           <dt>執行身分</dt>
           <dd>部署者</dd>
         </dl>

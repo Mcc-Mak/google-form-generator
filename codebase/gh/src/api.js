@@ -1,4 +1,4 @@
-import { GAS_WEB_APP_URL } from './constants'
+import { GAS_WEB_APP_URL, API_TOKEN } from './constants'
 
 export function getGasUrl() {
   return GAS_WEB_APP_URL
@@ -15,7 +15,7 @@ export async function callGas(payload) {
     response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ ...payload, token: API_TOKEN }),
     })
   } catch {
     throw new Error('無法連線至後端服務，請檢查 GAS Web App URL 是否正確。')

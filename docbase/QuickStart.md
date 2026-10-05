@@ -108,7 +108,7 @@ clasp 會將 `Code.gs` 與 `appsscript.json` 推送至 GAS 專案。
 3. 填寫說明（例如 `v0.2.0`）。
 4. 設定：
    - **執行身分**：`我`（即部署者，`USER_DEPLOYING`）
-   - **存取權限**：`僅限自己`（`MYSELF`）
+   - **存取權限**：`任何人`（`ANYONE_ANONYMOUS`）
 5. 點擊「部署」。
 
 ### 3.2 授權

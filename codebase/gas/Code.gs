@@ -16,6 +16,24 @@ var ACTIONS = {
   CREATE_FORM: 'createForm'
 };
 
+// ==================== 存取控制 ====================
+
+// API 存取權杖，前端需在每個請求中夾帶相同的 token 值。
+// 變更此值時需同步更新 codebase/gh/src/constants.js 的 API_TOKEN。
+var API_TOKEN = 'gfg-7kXm2pR9wL3qN8vT5sY1bJ4hF6dC0aZ';
+
+/**
+ * 驗證請求是否攜帶正確的 API token。
+ * @param {Object} params 請求參數。
+ * @return {Object|null} 驗證失敗回傳錯誤物件，成功回傳 null。
+ */
+function verifyToken(params) {
+  if (params.token !== API_TOKEN) {
+    return { ok: false, error: '未授權存取：API token 無效。' };
+  }
+  return null;
+}
+
 // ==================== HTTP 端點 ====================
 
 /**
@@ -25,7 +43,15 @@ var ACTIONS = {
  */
 function doGet(e) {
   var action = e.parameter.action;
-  var result = routeAction(action, e.parameter);
+  var authError = verifyToken(e.parameter);
+  if (authError) {
+    return ContentService
+      .createTextOutput(JSON.stringify(authError))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  var params = Object.assign({}, e.parameter);
+  delete params.token;
+  var result = routeAction(action, params);
   return ContentService
     .createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
@@ -45,8 +71,16 @@ function doPost(e) {
       .createTextOutput(JSON.stringify({ ok: false, error: '無法解析請求主體 JSON：' + err.message }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+  var authError = verifyToken(body);
+  if (authError) {
+    return ContentService
+      .createTextOutput(JSON.stringify(authError))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
   var action = body.action;
-  var result = routeAction(action, body);
+  var params = Object.assign({}, body);
+  delete params.token;
+  var result = routeAction(action, params);
   return ContentService
     .createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);

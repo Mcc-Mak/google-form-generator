@@ -11,7 +11,7 @@
 | `timeZone` | `Asia/Taipei` | 專案時區。 |
 | `runtimeVersion` | `V8` | GAS 執行引擎版本。 |
 | `exceptionLogging` | `STACKDRIVER` | 例外記錄方式。 |
-| `webapp.access` | `MYSELF` | Web App 僅允許部署者本人存取。 |
+| `webapp.access` | `ANYONE_ANONYMOUS` | Web App 允許任何人（含匿名）存取，但所有請求須攜帶正確的 API token（`API_TOKEN`），否則回傳未授權錯誤。 |
 | `webapp.executeAs` | `USER_DEPLOYING` | 以部署者身份執行，API 操作使用部署者權限。 |
 
 #### OAuth 範圍 (Scopes)

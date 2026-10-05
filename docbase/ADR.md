@@ -30,7 +30,7 @@
 
 - 前端與後端為獨立部署，需分別更新。
 - 前端需知道 GAS Web App URL，此 URL 由使用者在步驟一輸入。
-- GAS 的 `MYSELF` 存取設定確保僅部署者本人能呼叫 API，未授權使用者無法存取。
+- GAS 的 `ANYONE_ANONYMOUS` 存取設定（CORS 所需）搭配 API token 驗證，未攜帶正確 token 的請求會被拒絕。
 
 ---
 

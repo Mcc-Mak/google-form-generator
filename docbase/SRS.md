@@ -124,7 +124,7 @@
 | C-01 | React + Vite | 前端使用 React + Vite 建置，輸出為靜態 SPA 部署至 GitHub Pages。 |
 | C-02 | 無 CDN | 前端建置後為自包含靜態檔案，不引用任何外部 CDN 資源。 |
 | C-03 | 繁體中文 | 所有介面文字、錯誤訊息、文件內容均須使用繁體中文。 |
-| C-04 | GAS 存取設定 | GAS Web App 須設定為 `MYSELF` 存取，以 `USER_DEPLOYING` 身份執行。 |
+| C-04 | GAS 存取設定 | GAS Web App 須設定為 `ANYONE_ANONYMOUS` 存取（CORS 所需），以 `USER_DEPLOYING` 身份執行，並透過 API token 驗證限制存取。 |
 | C-05 | OAuth 範圍 | GAS 須授予 `spreadsheets`、`forms`、`drive`、`script.external_request` 權限。 |
 | C-06 | 試算表標題慣例 | 工作表第一列為欄位標題列，每個欄位對應一個表單問題。 |
 
