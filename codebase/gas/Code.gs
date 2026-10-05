@@ -18,9 +18,22 @@ var ACTIONS = {
 
 // ==================== 存取控制 ====================
 
-// API 存取權杖，前端需在每個請求中夾帶相同的 token 值。
-// 變更此值時需同步更新 codebase/gh/src/constants.js 的 API_TOKEN。
-var API_TOKEN = 'gfg-7kXm2pR9wL3qN8vT5sY1bJ4hF6dC0aZ';
+/**
+ * 取得儲存於 PropertiesService 的 API token。
+ * @return {string|null} API token，未設定時為 null。
+ */
+function getApiToken() {
+  return PropertiesService.getScriptProperties().getProperty('API_TOKEN');
+}
+
+/**
+ * 設定 API token（在 Apps Script 編輯器中手動執行此函式）。
+ * 範例：setupApiToken('my-secret-token')
+ * @param {string} token 新的 API token。
+ */
+function setupApiToken(token) {
+  PropertiesService.getScriptProperties().setProperty('API_TOKEN', token);
+}
 
 /**
  * 驗證請求是否攜帶正確的 API token。
@@ -28,7 +41,11 @@ var API_TOKEN = 'gfg-7kXm2pR9wL3qN8vT5sY1bJ4hF6dC0aZ';
  * @return {Object|null} 驗證失敗回傳錯誤物件，成功回傳 null。
  */
 function verifyToken(params) {
-  if (params.token !== API_TOKEN) {
+  var storedToken = getApiToken();
+  if (!storedToken) {
+    return { ok: false, error: '後端尚未設定 API token，請先在 Apps Script 編輯器中執行 setupApiToken()。' };
+  }
+  if (params.token !== storedToken) {
     return { ok: false, error: '未授權存取：API token 無效。' };
   }
   return null;

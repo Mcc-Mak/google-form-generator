@@ -5,7 +5,9 @@
 ## 0.6.1
 
 - **GAS Web App URL 更新**：更新前端 `constants.js`、`StepUrl.jsx`、`README.md`、CI `gas.yml` 中的部署網址與部署 ID。
-- **API token 存取控制**：`appsscript.json` 的 `webapp.access` 維持 `ANYONE_ANONYMOUS`（GAS Web App 跨域請求 CORS 所需），改在程式層加入 API token 驗證。所有請求須攜帶正確的 `token` 值，否則回傳未授權錯誤。前端 `api.js` 在每個請求中自動夾帶 `API_TOKEN`。
+- **API token 存取控制**：`appsscript.json` 的 `webapp.access` 維持 `ANYONE_ANONYMOUS`（GAS Web App 跨域請求 CORS 所需），改在程式層加入 API token 驗證。所有請求須攜帶正確的 `token` 值，否則回傳未授權錯誤。
+  - **token 動態儲存**：token 儲存於 GAS `PropertiesService.getScriptProperties()`，透過在 Apps Script 編輯器中執行 `setupApiToken(token)` 設定或變更，無需修改程式碼。
+  - **token 不含於原始碼**：前端不再硬編碼 token，改由使用者在步驟一輸入，儲存於瀏覽器 `localStorage`（key: `apiToken`）。
 - 更新 `ConfigSettings.md`、`QuickStart.md`、`ADR.md`、`SRS.md`、`ProjectCharter.md` 等文件以反映 token 驗證機制。
 
 ## 0.6.0

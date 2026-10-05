@@ -11,8 +11,18 @@
 | `timeZone` | `Asia/Taipei` | 專案時區。 |
 | `runtimeVersion` | `V8` | GAS 執行引擎版本。 |
 | `exceptionLogging` | `STACKDRIVER` | 例外記錄方式。 |
-| `webapp.access` | `ANYONE_ANONYMOUS` | Web App 允許任何人（含匿名）存取，但所有請求須攜帶正確的 API token（`API_TOKEN`），否則回傳未授權錯誤。 |
+| `webapp.access` | `ANYONE_ANONYMOUS` | Web App 允許任何人（含匿名）存取（GAS CORS 所需），但所有請求須攜帶正確的 API token，否則回傳未授權錯誤。 |
 | `webapp.executeAs` | `USER_DEPLOYING` | 以部署者身份執行，API 操作使用部署者權限。 |
+
+#### API Token 設定
+
+API token 儲存於 `PropertiesService.getScriptProperties()`，動態可變更，不包含在原始碼中。
+
+| 操作 | 方式 |
+|---|---|
+| 設定 token | 在 Apps Script 編輯器中執行 `setupApiToken('您的token')` |
+| 變更 token | 再次執行 `setupApiToken('新token')` 即可覆寫 |
+| 前端設定 | 使用者在步驟一輸入 token，儲存於瀏覽器 `localStorage`（key: `apiToken`） |
 
 #### OAuth 範圍 (Scopes)
 

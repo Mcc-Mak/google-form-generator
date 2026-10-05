@@ -3,7 +3,7 @@ export const STORAGE_KEY = 'gasWebAppUrl'
 export const GAS_WEB_APP_URL =
   'https://script.google.com/macros/s/AKfycbyAOXxRKN86p4BsPrmUQmZN172JlfkKh5Q0TonJB42VL3xjexPJ2dLSkaTpOsDY2m-nUg/exec'
 
-export const API_TOKEN = 'gfg-7kXm2pR9wL3qN8vT5sY1bJ4hF6dC0aZ'
+export const API_TOKEN_STORAGE_KEY = 'apiToken'
 
 export const QUESTION_TYPES = [
   { label: '簡答', value: '簡答' },

@@ -579,6 +579,50 @@ body {
   border-radius: 3px;
 }
 
+/* ==================== 權杖輸入 ==================== */
+
+.token-input-section {
+  margin-bottom: 1rem;
+}
+
+.token-input-section label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.token-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.token-input-row .form-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.token-input-row .form-input:focus {
+  border-color: var(--color-primary);
+}
+
+.token-input-section .config-note {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.8125rem;
+  color: var(--color-text-light);
+  line-height: 1.6;
+}
+
 /* ==================== 結果卡片 ==================== */
 
 .result-card {

@@ -1,7 +1,11 @@
-import { GAS_WEB_APP_URL, API_TOKEN } from './constants'
+import { GAS_WEB_APP_URL, API_TOKEN_STORAGE_KEY } from './constants'
 
 export function getGasUrl() {
   return GAS_WEB_APP_URL
+}
+
+export function getApiToken() {
+  return localStorage.getItem(API_TOKEN_STORAGE_KEY) || ''
 }
 
 export async function callGas(payload) {
@@ -10,12 +14,17 @@ export async function callGas(payload) {
     throw new Error('尚未設定 GAS Web App URL，請返回步驟一進行設定。')
   }
 
+  const token = getApiToken()
+  if (!token) {
+    throw new Error('尚未設定 API token，請返回步驟一輸入存取權杖。')
+  }
+
   let response
   try {
     response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ ...payload, token: API_TOKEN }),
+      body: JSON.stringify({ ...payload, token }),
     })
   } catch {
     throw new Error('無法連線至後端服務，請檢查 GAS Web App URL 是否正確。')

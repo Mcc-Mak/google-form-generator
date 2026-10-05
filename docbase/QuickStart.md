@@ -122,7 +122,17 @@ clasp 會將 `Code.gs` 與 `appsscript.json` 推送至 GAS 專案。
 
 請點擊「允許」完成授權。
 
-### 3.3 取得 Web App URL
+### 3.3 設定 API Token
+
+部署完成後，在 Apps Script 編輯器中執行 `setupApiToken` 函式設定存取權杖：
+
+```
+setupApiToken('您的密碼token')
+```
+
+此 token 儲存於 `PropertiesService`，不會包含在原始碼中。前端使用者在步驟一需輸入此 token 才能使用系統。
+
+### 3.4 取得 Web App URL
 
 部署完成後，系統會顯示 Web App URL，格式如下：
 
@@ -130,9 +140,7 @@ clasp 會將 `Code.gs` 與 `appsscript.json` 推送至 GAS 專案。
 https://script.google.com/macros/s/.../exec
 ```
 
-請複製此 URL，前端精靈步驟一需要輸入此 URL。
-
-### 3.4 更新部署
+### 3.5 更新部署
 
 若後端程式碼有更新：
 
