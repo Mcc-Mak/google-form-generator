@@ -13,10 +13,10 @@ export default function StepUrl({ onNext }) {
           <dd>Google Apps Script Web App</dd>
           <dt>部署網址</dt>
           <dd className="config-url">
-            https://script.google.com/macros/s/AKfycbzN09AHK1xRtgOG7AywmiLHown1ltjCTwS-sHpTHTe82bmT3uIQ2O6xlcUrtNw8Pg6gCA/exec
+            https://script.google.com/macros/s/AKfycbyAOXxRKN86p4BsPrmUQmZN172JlfkKh5Q0TonJB42VL3xjexPJ2dLSkaTpOsDY2m-nUg/exec
           </dd>
           <dt>存取權限</dt>
-          <dd>任何人（匿名）</dd>
+          <dd>僅限自己</dd>
           <dt>執行身分</dt>
           <dd>部署者</dd>
         </dl>

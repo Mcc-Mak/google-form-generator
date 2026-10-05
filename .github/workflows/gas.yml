@@ -68,7 +68,7 @@ jobs:
       - name: clasp 登入、推送與部署
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
-          GAS_DEPLOYMENT_ID: AKfycbzN09AHK1xRtgOG7AywmiLHown1ltjCTwS-sHpTHTe82bmT3uIQ2O6xlcUrtNw8Pg6gCA
+          GAS_DEPLOYMENT_ID: AKfycbyAOXxRKN86p4BsPrmUQmZN172JlfkKh5Q0TonJB42VL3xjexPJ2dLSkaTpOsDY2m-nUg
         run: |
           printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
           clasp push -f

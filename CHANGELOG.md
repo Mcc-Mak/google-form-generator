@@ -2,6 +2,12 @@
 
 本專案版本依 `major.minor.patch` 格式管理。
 
+## 0.6.1
+
+- **GAS Web App URL 更新**：更新前端 `constants.js`、`StepUrl.jsx`、`README.md`、CI `gas.yml` 中的部署網址與部署 ID。
+- **存取權限限制為僅限自己**：`appsscript.json` 的 `webapp.access` 由 `ANYONE_ANONYMOUS` 改為 `MYSELF`，僅允許部署者本人存取 API，提升安全性。
+- 更新 `ConfigSettings.md`、`QuickStart.md`、`ADR.md`、`SRS.md`、`ProjectCharter.md` 等文件以反映新的存取設定。
+
 ## 0.6.0
 
 - **自動命名與自動儲存**：建立表單時自動產生部署 ID（3 位數滾動計數器，001–999，超過則回到 001），以 `PropertiesService` 持久化儲存。
